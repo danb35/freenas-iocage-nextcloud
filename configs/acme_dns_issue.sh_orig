@@ -12,7 +12,7 @@
 
 # export CF_Key="sdfsdfsdfljlbjkljlkjsdfoiwje"
 # export CF_Email="me@example.com"
-# /root/.acme.sh/acme.sh --issue --home "/root/.acme.sh" --dns dns_cf -d YOURHOSTNAME --fullchain-file /usr/local/etc/pki/tls/certs/fullchain.pem --key-file /usr/local/etc/pki/tls/private/privkey.pem
+# /root/.acme.sh/acme.sh --issue --home "/root/.acme.sh" --dns dns_cf -d YOURHOSTNAME --fullchain-file /usr/local/etc/pki/tls/certs/fullchain.pem --key-file /usr/local/etc/pki/tls/private/privkey.pem --reloadcmd "service apache24 reload"
 
 
 # GoDaddy
@@ -23,4 +23,4 @@
 
 # export GD_Key="sdfsdfsdfljlbjkljlkjsdfoiwje"
 # export GD_Secret="asdfsdafdsfdsfdsfdsfdsafd"
-# /root/.acme.sh/acme.sh --issue --home "/root/.acme.sh" --dns dns_gd -d YOURHOSTNAME --fullchain-file /usr/local/etc/pki/tls/certs/fullchain.pem --key-file /usr/local/etc/pki/tls/private/privkey.pem
+# /root/.acme.sh/acme.sh --issue --home "/root/.acme.sh" --dns dns_gd -d YOURHOSTNAME --fullchain-file /usr/local/etc/pki/tls/certs/fullchain.pem --key-file /usr/local/etc/pki/tls/private/privkey.pem --reloadcmd "service apache24 reload"

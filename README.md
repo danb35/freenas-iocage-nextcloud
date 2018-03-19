@@ -13,21 +13,23 @@ Download the repository to a convenient directory on your FreeNAS system by runn
 ```
 JAIL_IP="192.168.1.199"
 DEFAULT_GW_IP="192.168.1.1"
+INTERFACE="igb0"
 POOL_PATH="/mnt/tank"
 JAIL_NAME="nextcloud"
 TIME_ZONE="America/New_York" # See http://php.net/manual/en/timezones.php
 HOST_NAME="YOUR_FQDN"
 STANDALONE_CERT=0
 DNS_CERT=0
+TEST_CERT="--test"
 ```
-Many of the options are self-explanatory, and all should be adjusted to suit your needs.  JAIL_IP and DEFAULT_GW_IP are the IP address and default gateway, respectively, for your jail.  POOL_PATH is the path for your data pool, on which the Nextcloud user data and MariaDB database will be stored.  JAIL_NAME is the name of the jail, and wouldn't ordinarily need to be changed.  TIME_ZONE is the time zone of your location, as PHP sees it--see the link above for a list of all valid time zone expressions.
+Many of the options are self-explanatory, and all should be adjusted to suit your needs.  JAIL_IP and DEFAULT_GW_IP are the IP address and default gateway, respectively, for your jail.  INTERFACE is the network interface that your FreeNAS server is actually using.  If you have multiple interfaces, run `ifconfig` and see which one has an IP address, and enter that one here.  POOL_PATH is the path for your data pool, on which the Nextcloud user data and MariaDB database will be stored.  JAIL_NAME is the name of the jail, and wouldn't ordinarily need to be changed.  TIME_ZONE is the time zone of your location, as PHP sees it--see the link above for a list of all valid time zone expressions.
 
-HOST_NAME is the fully-qualified domain name you want to assign to your installation.  You must own (or at least control) this domain, because Let's Encrypt will test that control.  STANDALONE_CERT and DNS_CERT control which validation method Let's Encrypt will use to do this.  If HOST_NAME is accessible to the outside world--that is, you have ports 80 and 443 (at least) forwarded to your jail, so that if an outside user browses to http://HOST_NAME/, he'll reach your jail--set STANDALONE_CERT to 1, and DNS_CERT to 0.  If HOST_NAME is not accessible to the outside world, but your DNS provider has an API that allows you to make automated changes, set DNS_CERT to 1, and STANDALONE_CERT to 0.  In that case, you'll also need to copy `configs/acme_dns_issue.sh_orig` to `configs/acme_dns_issue.sh`, edit its contents appropriately, and make it executable (`chmod +x configs/acme_dns_issue.sh`)
+HOST_NAME is the fully-qualified domain name you want to assign to your installation.  You must own (or at least control) this domain, because Let's Encrypt will test that control.  STANDALONE_CERT and DNS_CERT control which validation method Let's Encrypt will use to do this.  If HOST_NAME is accessible to the outside world--that is, you have ports 80 and 443 (at least) forwarded to your jail, so that if an outside user browses to http://HOST_NAME/, he'll reach your jail--set STANDALONE_CERT to 1, and DNS_CERT to 0.  If HOST_NAME is not accessible to the outside world, but your DNS provider has an API that allows you to make automated changes, set DNS_CERT to 1, and STANDALONE_CERT to 0.  In that case, you'll also need to copy `configs/acme_dns_issue.sh_orig` to `configs/acme_dns_issue.sh`, edit its contents appropriately, and make it executable (`chmod +x configs/acme_dns_issue.sh`).
+
+Finally, TEST_CERT is a flag to issue test certificates from Let's Encrypt.  They'll run through the same issuance process in the same, but will come from an un-trusted certificate authority (so you'll get a warning when you first visit your site).  For test purposes, I recommend you set this to "--test" as above, otherwise the [Let's Encrypt rate limits](https://letsencrypt.org/docs/rate-limits/) may prevent issuing the cert when you most want it.  Once you've confirmed that everything is working properly, you can set TEST_CERT to "".
 
 It's also critical that HOST_NAME resolves to your jail from **inside** your network.  You'll probably need to configure this on your router. 
 
 ### Execution
-Once you've downloaded the script, prepared the configuration file, and (if applicable) made the necessary edits to `configs/acme_dns_issue.sh`, make this script executable (`chmod +x nextcloud-jail.sh`) and run it (`./nextcloud-jail.sh`).  The script will run for several minutes.  When it finishes, your jail will be created, Nextcloud will be installed, and you'll be shown the database settings to configure your Nextcloud installation.
+Once you've downloaded the script, prepared the configuration file, and (if applicable) made the necessary edits to `configs/acme_dns_issue.sh`, make this script executable (`chmod +x nextcloud-jail.sh`) and run it (`./nextcloud-jail.sh`).  The script will run for several minutes.  When it finishes, your jail will be created, Nextcloud will be installed and configured, and you'll be shown the randomly-generated password for the default user ("admin").  You can then log in and create users, add data, and generally do whatever else you like.
 
-### Further Configuration
-There's further configuration that needs to be done inside the jail after Nextcloud is set up; more to follow shortly on this.

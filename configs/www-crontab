@@ -1,0 +1,1 @@
+*/15 * * * * /usr/local/bin/php -f /usr/local/www/apache24/data/nextcloud/cron.php

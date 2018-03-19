@@ -28,3 +28,6 @@ It's also critical that HOST_NAME resolves to your jail from **inside** your net
 
 ### Execution
 Once you've downloaded the script, prepared the configuration file, and (if applicable) made the necessary edits to `configs/acme_dns_issue.sh`, make this script executable (`chmod +x nextcloud-jail.sh`) and run it (`./nextcloud-jail.sh`).  The script will run for several minutes.  When it finishes, your jail will be created, Nextcloud will be installed, and you'll be shown the database settings to configure your Nextcloud installation.
+
+### Further Configuration
+There's further configuration that needs to be done inside the jail after Nextcloud is set up; more to follow shortly on this.

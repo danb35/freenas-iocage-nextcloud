@@ -104,6 +104,9 @@ iocage exec ${JAIL_NAME} su -m www -c "php /usr/local/www/apache24/data/nextclou
 iocage exec ${JAIL_NAME} su -m www -c 'php /usr/local/www/apache24/data/nextcloud/occ background:cron'
 iocage exec ${JAIL_NAME} crontab -u www /mnt/configs/www-crontab
 
+# Don't need /mnt/configs any more, so unmount it
+iocage fstab -r ${JAIL_NAME} ${CONFIGS_PATH} /mnt/configs nullfs rw 0 0
+
 # Done!
 echo "Installation complete!"
 echo "Using your web browser, go to https://${HOST_NAME} to log in"

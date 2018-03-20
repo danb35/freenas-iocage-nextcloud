@@ -20,12 +20,6 @@ STANDALONE_CERT=0
 DNS_CERT=0
 TEST_CERT="--test"
 
-# Check for nextcloud-config and set configuration
-if ! [ -e $SCRIPTPATH/nextcloud-config ]; then
-  echo "$SCRIPTPATH/nextcloud-config must exist."
-  exit 1
-fi  
-
 SCRIPT=$(readlink -f "$0")
 SCRIPTPATH=$(dirname "$SCRIPT")
 . $SCRIPTPATH/nextcloud-config
@@ -33,6 +27,12 @@ CONFIGS_PATH=$SCRIPTPATH/configs
 DB_ROOT_PASSWORD=$(openssl rand -base64 16)
 DB_PASSWORD=$(openssl rand -base64 16)
 ADMIN_PASSWORD=$(openssl rand -base64 12)
+
+# Check for nextcloud-config and set configuration
+if ! [ -e $SCRIPTPATH/nextcloud-config ]; then
+  echo "$SCRIPTPATH/nextcloud-config must exist."
+  exit 1
+fi  
 
 # Check that necessary variables were set by nextcloud-config
 if [ -z $JAIL_IP ]; then

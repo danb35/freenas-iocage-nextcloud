@@ -1,7 +1,30 @@
 #!/bin/sh
 # Build an iocage jail under FreeNAS 11.1 using the current release of Nextcloud 13
 # https://github.com/danb35/freenas-iocage-nextcloud
-#
+
+# Check for root privileges
+if ! [ $(id -u) = 0 ]; then
+   echo "This script must be run with root privileges"
+   exit 1
+fi
+
+# Initialize defaults
+JAIL_IP=""
+DEFAULT_GW_IP=""
+INTERFACE=""
+POOL_PATH=""
+JAIL_NAME="nextcloud"
+TIME_ZONE=""
+HOST_NAME=""
+STANDALONE_CERT=0
+DNS_CERT=0
+TEST_CERT="--test"
+
+# Check for nextcloud-config and set configuration
+if ! [ -e $SCRIPTPATH/nextcloud-config ]; then
+  echo "$SCRIPTPATH/nextcloud-config must exist."
+  exit 1
+fi  
 
 SCRIPT=$(readlink -f "$0")
 SCRIPTPATH=$(dirname "$SCRIPT")
@@ -10,6 +33,42 @@ CONFIGS_PATH=$SCRIPTPATH/configs
 DB_ROOT_PASSWORD=$(openssl rand -base64 16)
 DB_PASSWORD=$(openssl rand -base64 16)
 ADMIN_PASSWORD=$(openssl rand -base64 12)
+
+# Check that necessary variables were set by nextcloud-config
+if [ -z $JAIL_IP ]; then
+  echo 'Configuration error: JAIL_IP must be set'
+  exit 1
+fi
+if [ -z $DEFAULT_GW_IP ]; then
+  echo 'Configuration error: DEFAULT_GW_IP must be set'
+  exit 1
+fi
+if [ -z $INTERFACE ]; then
+  echo 'Configuration error: INTERFACE must be set'
+  exit 1
+fi
+if [ -z $POOL_PATH ]; then
+  echo 'Configuration error: POOL_PATH must be set'
+  exit 1
+fi
+if [ -z $TIME_ZONE ]; then
+  echo 'Configuration error: TIME_ZONE must be set'
+  exit 1
+fi
+if [ -z $HOST_NAME ]; then
+  echo 'Configuration error: HOST_NAME must be set'
+  exit 1
+fi
+if [ STANDALONE_CERT -eq 0 ] && [ DNS_CERT -eq 0 ]; then
+  echo 'Configuration error: Either STANDALONE_CERT or DNS_CERT'
+  echo 'must be set to 1.'
+  exit 1
+fi
+if [ DNS_CERT -eq 1 ] && ! [ -x CONFIGS_PATH/acme_dns_issue.sh ]; then
+  echo 'If DNS_CERT is set to 1, configs/acme_dns_issue.sh must exist'
+  echo 'and be executable.'
+  exit 1
+fi
 
 echo '{"pkgs":["nano","curl","sudo","apache24","mariadb101-server","redis","php72-ctype","php72-dom","php72-gd","php72-iconv","php72-json","php72-mbstring","php72-posix","php72-simplexml","php72-xmlreader","php72-xmlwriter","php72-zip","php72-zlib","php72-pdo_mysql","php72-hash","php72-xml","php72-session","php72-mysqli","php72-wddx","php72-xsl","php72-filter","php72-curl","php72-fileinfo","php72-bz2","php72-intl","php72-openssl","php72-ldap","php72-ftp","php72-imap","php72-exif","php72-gmp","php72-memcache","php72-opcache","php72-pcntl","php72","mod_php72","bash","p5-Locale-gettext","help2man","texinfo","m4","autoconf","socat","git"]}' > /tmp/pkg.json
 

@@ -59,12 +59,12 @@ if [ -z $HOST_NAME ]; then
   echo 'Configuration error: HOST_NAME must be set'
   exit 1
 fi
-if [ STANDALONE_CERT -eq 0 ] && [ DNS_CERT -eq 0 ]; then
+if [ $STANDALONE_CERT -eq 0 ] && [ $DNS_CERT -eq 0 ]; then
   echo 'Configuration error: Either STANDALONE_CERT or DNS_CERT'
   echo 'must be set to 1.'
   exit 1
 fi
-if [ DNS_CERT -eq 1 ] && ! [ -x CONFIGS_PATH/acme_dns_issue.sh ]; then
+if [ $DNS_CERT -eq 1 ] && ! [ -x $CONFIGS_PATH/acme_dns_issue.sh ]; then
   echo 'If DNS_CERT is set to 1, configs/acme_dns_issue.sh must exist'
   echo 'and be executable.'
   exit 1

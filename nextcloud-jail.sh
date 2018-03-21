@@ -111,7 +111,7 @@ iocage exec ${JAIL_NAME} rm /tmp/get-acme.sh
 
 # Issue certificate.  If standalone mode is selected, issue directly, otherwise call external script to issue cert via DNS validation
 if [ $STANDALONE_CERT -eq 1 ]; then
-  iocage exec ${JAIL_NAME} /root/.acme.sh/acme.sh --issue ${TEST_CERT} --home "/root/.acme.sh" --standalone -d ${HOST_NAME} --fullchain-file /usr/local/etc/pki/tls/certs/fullchain.pem --key-file /usr/local/etc/pki/tls/private/privkey.pem
+  iocage exec ${JAIL_NAME} /root/.acme.sh/acme.sh --issue ${TEST_CERT} --home "/root/.acme.sh" --standalone -d ${HOST_NAME} -k 4096 --fullchain-file /usr/local/etc/pki/tls/certs/fullchain.pem --key-file /usr/local/etc/pki/tls/private/privkey.pem
 fi
 
 if [ $DNS_CERT -eq 1 ]; then
@@ -129,6 +129,7 @@ iocage exec ${JAIL_NAME} sed -i '' "s/yourhostnamehere/${HOST_NAME}/" /usr/local
 iocage exec ${JAIL_NAME} sed -i '' "s/yourhostnamehere/${HOST_NAME}/" /usr/local/etc/apache24/httpd.conf
 iocage exec ${JAIL_NAME} sed -i '' "s/#skip-networking/skip-networking/" /var/db/mysql/my.cnf
 iocage exec ${JAIL_NAME} sed -i '' "s|mytimezone|${TIME_ZONE}|" /usr/local/etc/php.ini
+iocage exec ${JAIL_NAME} openssl dhparam -out /usr/local/etc/pki/private/dhparams_4096.pem 4096
 iocage restart ${JAIL_NAME}
 
 # Secure database, set root password, create Nextcloud DB, user, and password
@@ -150,7 +151,7 @@ iocage exec ${JAIL_NAME} echo "Nextcloud Administrator password is ${ADMIN_PASSW
 
 # If standalone mode was used to issue certificate, reissue using webroot
 if [ $STANDALONE_CERT -eq 1 ]; then
-  iocage exec ${JAIL_NAME} /root/.acme.sh/acme.sh --issue ${TEST_CERT} --home "/root/.acme.sh" -d ${HOST_NAME} -w /usr/local/www/apache24/data --fullchain-file /usr/local/etc/pki/tls/certs/fullchain.pem --key-file /usr/local/etc/pki/tls/private/privkey.pem --reloadcmd "service apache24 reload"
+  iocage exec ${JAIL_NAME} /root/.acme.sh/acme.sh --issue ${TEST_CERT} --home "/root/.acme.sh" -d ${HOST_NAME} -w /usr/local/www/apache24/data -k 4096 --fullchain-file /usr/local/etc/pki/tls/certs/fullchain.pem --key-file /usr/local/etc/pki/tls/private/privkey.pem --reloadcmd "service apache24 reload"
 fi
 
 # CLI installation and configuration of Nextcloud

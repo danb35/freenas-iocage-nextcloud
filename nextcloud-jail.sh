@@ -113,7 +113,7 @@ iocage exec ${JAIL_NAME} rm /tmp/get-acme.sh
 # Issue certificate.  If standalone mode is selected, issue directly, otherwise call external script to issue cert via DNS validation
 if [ $STANDALONE_CERT -eq 1 ]; then
   iocage exec ${JAIL_NAME} /root/.acme.sh/acme.sh --issue ${TEST_CERT} --home "/root/.acme.sh" --standalone -d ${HOST_NAME} -k 4096 --fullchain-file /usr/local/etc/pki/tls/certs/fullchain.pem --key-file /usr/local/etc/pki/tls/private/privkey.pem
-else if [ $DNS_CERT -eq 1 ]; then
+elif [ $DNS_CERT -eq 1 ]; then
   iocage exec ${JAIL_NAME} /mnt/configs/acme_dns_issue.sh
 fi
 

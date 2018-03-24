@@ -33,3 +33,7 @@ It's also helpful if HOST_NAME resolves to your jail from **inside** your networ
 ### Execution
 Once you've downloaded the script, prepared the configuration file, and (if applicable) made the necessary edits to `configs/acme_dns_issue.sh`, run this script (`./nextcloud-jail.sh`).  The script will run for several minutes.  When it finishes, your jail will be created, Nextcloud will be installed and configured, and you'll be shown the randomly-generated password for the default user ("admin").  You can then log in and create users, add data, and generally do whatever else you like.
 
+### To Do
+This script has been tested on a few different systems, obtaining the cert in both DNS and Standalone mode, and everything seems to be working properly.  Further testing is, of course, always appreciated.
+
+I'd also appreciate any suggestions (or pull requests) to improve the various config files I'm using.  Most of them are adapted from the default configuration files that ship with the software in question, and have only been lightly edited to work in this application.  But if there are changes to settings or organization that could improve performance or reliability, I'd like to hear about them.

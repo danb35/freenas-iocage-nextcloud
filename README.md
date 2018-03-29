@@ -4,8 +4,13 @@ Script to create an iocage jail on FreeNAS for the latest Nextcloud 13 release, 
 This script will create an iocage jail on FreeNAS 11.1 with the latest release of Nextcloud 13, along with its dependencies.  It will obtain a trusted certificate from Let's Encrypt for the system, install it, and configure it to renew automatically.  It will create the Nextcloud database and generate a strong root password and user password for the database system.  It will configure the jail to store the database and Nextcloud user data outside the jail, so it will not be lost in the event you need to rebuild the jail.
 
 ## Status
-This script has been tested on FreeNAS 11.1-U2 and appears to be working without issue.  It is known to NOT work on 11.1-U3 or 11.1-U4--11.1-U3 appears to have introduced a bug in the networking code of the iocage jail manager.
+This script has been tested on FreeNAS 11.1-U2 and appears to be working without issue.  It is known to NOT work on 11.1-U3 or 11.1-U4 out of the box. 11.1-U3 has a version of iocage with a bug in the jail creation script. This can be fixed by using the following commands.
 
+```
+cd /tmp
+git clone --recursive https://github.com/iocage/iocage
+cp -R iocage/iocage/lib/ /usr/local/lib/python3.6/site-packages/iocage/lib
+```
 ## Usage
 
 ### Prerequisites
@@ -17,6 +22,7 @@ Download the repository to a convenient directory on your FreeNAS system by runn
 JAIL_IP="192.168.1.199"
 DEFAULT_GW_IP="192.168.1.1"
 INTERFACE="igb0"
+VNET="off"
 POOL_PATH="/mnt/tank"
 JAIL_NAME="nextcloud"
 TIME_ZONE="America/New_York" # See http://php.net/manual/en/timezones.php
@@ -25,7 +31,7 @@ STANDALONE_CERT=0
 DNS_CERT=0
 TEST_CERT="--test"
 ```
-Many of the options are self-explanatory, and all should be adjusted to suit your needs.  JAIL_IP and DEFAULT_GW_IP are the IP address and default gateway, respectively, for your jail.  INTERFACE is the network interface that your FreeNAS server is actually using.  If you have multiple interfaces, run `ifconfig` and see which one has an IP address, and enter that one here.  POOL_PATH is the path for your data pool, on which the Nextcloud user data and MariaDB database will be stored.  JAIL_NAME is the name of the jail, and wouldn't ordinarily need to be changed.  If you don't specify it in nextcloud-config, JAIL_NAME will default to "nextcloud".  TIME_ZONE is the time zone of your location, as PHP sees it--see the [PHP manual](http://php.net/manual/en/timezones.php) for a list of all valid time zones.
+Many of the options are self-explanatory, and all should be adjusted to suit your needs.  JAIL_IP and DEFAULT_GW_IP are the IP address and default gateway, respectively, for your jail.  INTERFACE is the network interface that your FreeNAS server is actually using.  If you have multiple interfaces, run `ifconfig` and see which one has an IP address, and enter that one here. If you want to use a virtual non-shared IP, pick a unused name as your interface and set VNET to ''on''  POOL_PATH is the path for your data pool, on which the Nextcloud user data and MariaDB database will be stored.  JAIL_NAME is the name of the jail, and wouldn't ordinarily need to be changed.  If you don't specify it in nextcloud-config, JAIL_NAME will default to "nextcloud".  TIME_ZONE is the time zone of your location, as PHP sees it--see the [PHP manual](http://php.net/manual/en/timezones.php) for a list of all valid time zones.
 
 HOST_NAME is the fully-qualified domain name you want to assign to your installation.  You must own (or at least control) this domain, because Let's Encrypt will test that control.  STANDALONE_CERT and DNS_CERT control which validation method Let's Encrypt will use to do this.  If HOST_NAME is accessible to the outside world--that is, you have ports 80 and 443 (at least) forwarded to your jail, so that if an outside user browses to http://HOST_NAME/, he'll reach your jail--set STANDALONE_CERT to 1, and DNS_CERT to 0.  If HOST_NAME is not accessible to the outside world, but your DNS provider has an API that allows you to make automated changes, set DNS_CERT to 1, and STANDALONE_CERT to 0.  In that case, you'll also need to copy `configs/acme_dns_issue.sh_orig` to `configs/acme_dns_issue.sh`, edit its contents appropriately, and make it executable (`chmod +x configs/acme_dns_issue.sh`).
 

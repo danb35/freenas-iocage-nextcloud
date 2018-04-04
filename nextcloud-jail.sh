@@ -140,6 +140,11 @@ iocage exec ${JAIL_NAME} cp -f /mnt/configs/001_mod_php.conf /usr/local/etc/apac
 iocage exec ${JAIL_NAME} cp -f /mnt/configs/nextcloud.conf /usr/local/etc/apache24/Includes/${HOST_NAME}.conf
 iocage exec ${JAIL_NAME} cp -f /mnt/configs/www.conf /usr/local/etc/php-fpm.d/
 iocage exec ${JAIL_NAME} cp -f /usr/local/share/mysql/my-small.cnf /var/db/mysql/my.cnf
+if [ $VNET -eq on ]; then
+  iocage exec ${JAIL_NAME} sed -i '' "s/bindapacheto/*/" /usr/local/etc/apache24/Includes/${HOST_NAME}.conf
+else
+  iocage exec ${JAIL_NAME} sed -i '' "s/bindapacheto/${HOST_NAME}/" /usr/local/etc/apache24/Includes/${HOST_NAME}.conf
+fi
 iocage exec ${JAIL_NAME} sed -i '' "s/yourhostnamehere/${HOST_NAME}/" /usr/local/etc/apache24/Includes/${HOST_NAME}.conf
 iocage exec ${JAIL_NAME} sed -i '' "s/yourhostnamehere/${HOST_NAME}/" /usr/local/etc/apache24/httpd.conf
 iocage exec ${JAIL_NAME} sed -i '' "s/#skip-networking/skip-networking/" /var/db/mysql/my.cnf

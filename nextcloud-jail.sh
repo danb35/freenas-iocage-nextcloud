@@ -17,6 +17,9 @@ POOL_PATH=""
 JAIL_NAME="nextcloud"
 TIME_ZONE=""
 HOST_NAME=""
+DB_PATH=""
+FILES_PATH=""
+PORTS_PATH=""
 STANDALONE_CERT=0
 DNS_CERT=0
 TEST_CERT="--test"
@@ -71,31 +74,43 @@ if [ $DNS_CERT -eq 1 ] && ! [ -x $CONFIGS_PATH/acme_dns_issue.sh ]; then
   exit 1
 fi
 
-echo '{"pkgs":["nano","curl","sudo","apache24","mariadb101-server","redis","php72-ctype","php72-dom","php72-gd","php72-iconv","php72-json","php72-mbstring","php72-posix","php72-simplexml","php72-xmlreader","php72-xmlwriter","php72-zip","php72-zlib","php72-pdo_mysql","php72-hash","php72-xml","php72-session","php72-mysqli","php72-wddx","php72-xsl","php72-filter","php72-curl","php72-fileinfo","php72-bz2","php72-intl","php72-openssl","php72-ldap","php72-ftp","php72-imap","php72-exif","php72-gmp","php72-memcache","php72-opcache","php72-pcntl","php72","bash","p5-Locale-gettext","help2man","texinfo","m4","autoconf","socat","git"]}' > /tmp/pkg.json
+# If DB_PATH, FILES_PATH, and PORTS_PATH weren't set in nextcloud-config, set them
+if [ -z $DB_PATH ]; then
+  DB_PATH="${POOL_PATH}/db"
+fi
+if [ -z $FILES_PATH ]; then
+  FILES_PATH="${POOL_PATH}/files"
+fi
+if [ -z $PORTS_PATH ]; then
+  PORTS_PATH="${POOL_PATH}/portsnap"
+fi
+
+echo '{"pkgs":["nano","curl","sudo","mariadb101-server","redis","php72-ctype","php72-dom","php72-gd","php72-iconv","php72-json","php72-mbstring","php72-posix","php72-simplexml","php72-xmlreader","php72-xmlwriter","php72-zip","php72-zlib","php72-pdo_mysql","php72-hash","php72-xml","php72-session","php72-mysqli","php72-wddx","php72-xsl","php72-filter","php72-curl","php72-fileinfo","php72-bz2","php72-intl","php72-openssl","php72-ldap","php72-ftp","php72-imap","php72-exif","php72-gmp","php72-memcache","php72-opcache","php72-pcntl","php72","bash","p5-Locale-gettext","help2man","texinfo","m4","autoconf","socat","git"]}' > /tmp/pkg.json
 
 iocage create --name "${JAIL_NAME}" -p /tmp/pkg.json -r 11.1-RELEASE ip4_addr="${INTERFACE}|${JAIL_IP}/24" defaultrouter="${DEFAULT_GW_IP}" boot="on" host_hostname="${JAIL_NAME}" vnet="${VNET}"
 rm /tmp/pkg.json
 
-mkdir -p ${POOL_PATH}/db/
-chown -R 88:88 ${POOL_PATH}/db/
-mkdir -p ${POOL_PATH}/files
-chown -R 80:80 ${POOL_PATH}/files
-mkdir -p ${POOL_PATH}/portsnap/ports
-mkdir -p ${POOL_PATH}/portsnap/db
+mkdir -p ${DB_PATH}/
+chown -R 88:88 ${DB_PATH}/
+mkdir -p ${FILES_PATH}
+chown -R 80:80 ${FILES_PATH}
+mkdir -p ${PORTS_PATH}/ports
+mkdir -p ${PORTS_PATH}/db
 iocage exec ${JAIL_NAME} mkdir -p /mnt/files
 iocage exec ${JAIL_NAME} mkdir -p /var/db/mysql
 iocage exec ${JAIL_NAME} mkdir -p /mnt/configs
-iocage fstab -a ${JAIL_NAME} ${POOL_PATH}/portsnap/ports /usr/ports nullfs rw 0 0
-iocage fstab -a ${JAIL_NAME} ${POOL_PATH}/portsnap/db /var/db/portsnap nullfs rw 0 0
-iocage fstab -a ${JAIL_NAME} ${POOL_PATH}/files /mnt/files nullfs rw 0 0
-iocage fstab -a ${JAIL_NAME} ${POOL_PATH}/db  /var/db/mysql  nullfs  rw  0  0
+iocage fstab -a ${JAIL_NAME} ${PORTS_PATH}/ports /usr/ports nullfs rw 0 0
+iocage fstab -a ${JAIL_NAME} ${PORTS_PATH}/db /var/db/portsnap nullfs rw 0 0
+iocage fstab -a ${JAIL_NAME} ${FILES_PATH} /mnt/files nullfs rw 0 0
+iocage fstab -a ${JAIL_NAME} ${DB_PATH}  /var/db/mysql  nullfs  rw  0  0
 iocage fstab -a ${JAIL_NAME} ${CONFIGS_PATH} /mnt/configs nullfs rw 0 0
 iocage exec ${JAIL_NAME} chown -R www:www /mnt/files
 iocage exec ${JAIL_NAME} chmod -R 770 /mnt/files
 iocage exec ${JAIL_NAME} "if [ -z /usr/ports ]; then portsnap fetch extract; else portsnap auto; fi"
 iocage exec ${JAIL_NAME} chsh -s /usr/local/bin/bash root
+iocage exec ${JAIL_NAME} make -C /usr/ports/www/apache24 clean install BATCH=yes
 iocage exec ${JAIL_NAME} fetch -o /tmp https://download.nextcloud.com/server/releases/latest-13.tar.bz2
-iocage exec ${JAIL_NAME} tar xjfv /tmp/latest-13.tar.bz2 -C /usr/local/www/apache24/data/
+iocage exec ${JAIL_NAME} tar xjf /tmp/latest-13.tar.bz2 -C /usr/local/www/apache24/data/
 iocage exec ${JAIL_NAME} chown -R www:www /usr/local/www/apache24/data/nextcloud/
 iocage exec ${JAIL_NAME} sysrc apache24_enable="YES"
 iocage exec ${JAIL_NAME} sysrc mysql_enable="YES"
@@ -159,7 +174,7 @@ fi
 # CLI installation and configuration of Nextcloud
 iocage exec ${JAIL_NAME} touch /var/log/nextcloud.log
 iocage exec ${JAIL_NAME} chown www /var/log/nextcloud.log
-iocage exec ${JAIL_NAME} su -m www -c "php /usr/local/www/apache24/data/nextcloud/occ maintenance:install --database=\"mysql\" --database-name=\"nextcloud\" --database-user=\"nextcloud\" --database-pass=\"${DB_PASSWORD}\" --database-host=\"localhost:/tmp/mysql.sock\" --admin-user=\"nc-admin\" --admin-pass=\"${ADMIN_PASSWORD}\" --data-dir=\"/mnt/files\""
+iocage exec ${JAIL_NAME} su -m www -c "php /usr/local/www/apache24/data/nextcloud/occ maintenance:install --database=\"mysql\" --database-name=\"nextcloud\" --database-user=\"nextcloud\" --database-pass=\"${DB_PASSWORD}\" --database-host=\"localhost:/tmp/mysql.sock\" --admin-user=\"admin\" --admin-pass=\"${ADMIN_PASSWORD}\" --data-dir=\"/mnt/files\""
 iocage exec ${JAIL_NAME} su -m www -c "php /usr/local/www/apache24/data/nextcloud/occ config:system:set logtimezone --value=\"${TIME_ZONE}\""
 iocage exec ${JAIL_NAME} su -m www -c 'php /usr/local/www/apache24/data/nextcloud/occ config:system:set log_type --value="file"'
 iocage exec ${JAIL_NAME} su -m www -c 'php /usr/local/www/apache24/data/nextcloud/occ config:system:set logfile --value="/var/log/nextcloud.log"'
@@ -183,7 +198,7 @@ iocage fstab -r ${JAIL_NAME} ${CONFIGS_PATH} /mnt/configs nullfs rw 0 0
 # Done!
 echo "Installation complete!"
 echo "Using your web browser, go to https://${HOST_NAME} to log in"
-echo "Default user is nc-admin, password is ${ADMIN_PASSWORD}"
+echo "Default user is admin, password is ${ADMIN_PASSWORD}"
 echo ""
 echo "Database Information"
 echo "--------------------"

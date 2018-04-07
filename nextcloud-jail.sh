@@ -85,7 +85,21 @@ if [ -z $PORTS_PATH ]; then
   PORTS_PATH="${POOL_PATH}/portsnap"
 fi
 
-echo '{"pkgs":["nano","curl","sudo","mariadb101-server","redis","php72-ctype","php72-dom","php72-gd","php72-iconv","php72-json","php72-mbstring","php72-posix","php72-simplexml","php72-xmlreader","php72-xmlwriter","php72-zip","php72-zlib","php72-pdo_mysql","php72-hash","php72-xml","php72-session","php72-mysqli","php72-wddx","php72-xsl","php72-filter","php72-curl","php72-fileinfo","php72-bz2","php72-intl","php72-openssl","php72-ldap","php72-ftp","php72-imap","php72-exif","php72-gmp","php72-memcache","php72-opcache","php72-pcntl","php72","bash","p5-Locale-gettext","help2man","texinfo","m4","autoconf","socat","git"]}' > /tmp/pkg.json
+cat <<__EOF__ >/tmp/pkg.json
+{
+  "pkgs":[
+  "nano","curl","sudo","apache24","mariadb101-server","redis","php72-ctype",
+  "php72-dom","php72-gd","php72-iconv","php72-json","php72-mbstring",
+  "php72-posix","php72-simplexml","php72-xmlreader","php72-xmlwriter",
+  "php72-zip","php72-zlib","php72-pdo_mysql","php72-hash","php72-xml",
+  "php72-session","php72-mysqli","php72-wddx","php72-xsl","php72-filter",
+  "php72-curl","php72-fileinfo","php72-bz2","php72-intl","php72-openssl",
+  "php72-ldap","php72-ftp","php72-imap","php72-exif","php72-gmp",
+  "php72-memcache","php72-opcache","php72-pcntl","php72","bash",
+  "p5-Locale-gettext","help2man","texinfo","m4","autoconf","socat","git"
+  ]
+}
+__EOF__
 
 iocage create --name "${JAIL_NAME}" -p /tmp/pkg.json -r 11.1-RELEASE ip4_addr="${INTERFACE}|${JAIL_IP}/24" defaultrouter="${DEFAULT_GW_IP}" boot="on" host_hostname="${JAIL_NAME}" vnet="${VNET}"
 rm /tmp/pkg.json

@@ -88,7 +88,7 @@ fi
 cat <<__EOF__ >/tmp/pkg.json
 {
   "pkgs":[
-  "nano","curl","sudo","mariadb101-server","redis","php72-ctype",
+  "nano","curl","sudo","nginx","mariadb101-server","redis","php72-ctype",
   "php72-dom","php72-gd","php72-iconv","php72-json","php72-mbstring",
   "php72-posix","php72-simplexml","php72-xmlreader","php72-xmlwriter",
   "php72-zip","php72-zlib","php72-pdo_mysql","php72-hash","php72-xml",
@@ -122,11 +122,10 @@ iocage exec ${JAIL_NAME} chown -R www:www /mnt/files
 iocage exec ${JAIL_NAME} chmod -R 770 /mnt/files
 iocage exec ${JAIL_NAME} "if [ -z /usr/ports ]; then portsnap fetch extract; else portsnap auto; fi"
 iocage exec ${JAIL_NAME} chsh -s /usr/local/bin/bash root
-iocage exec ${JAIL_NAME} make -C /usr/ports/www/apache24 clean install BATCH=yes
 iocage exec ${JAIL_NAME} fetch -o /tmp https://download.nextcloud.com/server/releases/latest-13.tar.bz2
-iocage exec ${JAIL_NAME} tar xjf /tmp/latest-13.tar.bz2 -C /usr/local/www/apache24/data/
-iocage exec ${JAIL_NAME} chown -R www:www /usr/local/www/apache24/data/nextcloud/
-iocage exec ${JAIL_NAME} sysrc apache24_enable="YES"
+iocage exec ${JAIL_NAME} tar xjf /tmp/latest-13.tar.bz2 -C /usr/local/www/
+iocage exec ${JAIL_NAME} chown -R www:www /usr/local/www/nextcloud/
+iocage exec ${JAIL_NAME} sysrc nginx_enable="YES"
 iocage exec ${JAIL_NAME} sysrc mysql_enable="YES"
 iocage exec ${JAIL_NAME} sysrc redis_enable="YES"
 iocage exec ${JAIL_NAME} sysrc php_fpm_enable="YES"
@@ -148,16 +147,13 @@ elif [ $DNS_CERT -eq 1 ]; then
 fi
 
 # Copy and edit pre-written config files
-iocage exec ${JAIL_NAME} cp -f /mnt/configs/httpd.conf /usr/local/etc/apache24/httpd.conf
+iocage exec ${JAIL_NAME} cp -f /mnt/configs/nginx.conf /usr/local/etc/nginx/nginx.conf
 iocage exec ${JAIL_NAME} cp -f /mnt/configs/php.ini /usr/local/etc/php.ini
 iocage exec ${JAIL_NAME} cp -f /mnt/configs/redis.conf /usr/local/etc/redis.conf
-iocage exec ${JAIL_NAME} cp -f /mnt/configs/001_mod_php.conf /usr/local/etc/apache24/modules.d/001_mod_php.conf
-iocage exec ${JAIL_NAME} cp -f /mnt/configs/nextcloud.conf /usr/local/etc/apache24/Includes/${HOST_NAME}.conf
 iocage exec ${JAIL_NAME} cp -f /mnt/configs/www.conf /usr/local/etc/php-fpm.d/
 iocage exec ${JAIL_NAME} cp -f /usr/local/share/mysql/my-small.cnf /var/db/mysql/my.cnf
-iocage exec ${JAIL_NAME} sed -i '' "s/yourhostnamehere/${HOST_NAME}/" /usr/local/etc/apache24/Includes/${HOST_NAME}.conf
-iocage exec ${JAIL_NAME} sed -i '' "s/jailiphere/${JAIL_IP}/" /usr/local/etc/apache24/Includes/${HOST_NAME}.conf
-iocage exec ${JAIL_NAME} sed -i '' "s/yourhostnamehere/${HOST_NAME}/" /usr/local/etc/apache24/httpd.conf
+iocage exec ${JAIL_NAME} sed -i '' "s/yourhostnamehere/${HOST_NAME}/" /usr/local/etc/nginx/nginx.conf
+iocage exec ${JAIL_NAME} sed -i '' "s/jailiphere/${JAIL_IP}/" /usr/local/etc/nginx/nginx.conf
 iocage exec ${JAIL_NAME} sed -i '' "s/#skip-networking/skip-networking/" /var/db/mysql/my.cnf
 iocage exec ${JAIL_NAME} sed -i '' "s|mytimezone|${TIME_ZONE}|" /usr/local/etc/php.ini
 # iocage exec ${JAIL_NAME} openssl dhparam -out /usr/local/etc/pki/tls/private/dhparams_4096.pem 4096
@@ -182,30 +178,28 @@ iocage exec ${JAIL_NAME} echo "Nextcloud Administrator password is ${ADMIN_PASSW
 
 # If standalone mode was used to issue certificate, reissue using webroot
 if [ $STANDALONE_CERT -eq 1 ]; then
-  iocage exec ${JAIL_NAME} /root/.acme.sh/acme.sh --issue ${TEST_CERT} --home "/root/.acme.sh" -d ${HOST_NAME} -w /usr/local/www/apache24/data/nextcloud -k 4096 --fullchain-file /usr/local/etc/pki/tls/certs/fullchain.pem --key-file /usr/local/etc/pki/tls/private/privkey.pem --reloadcmd "service apache24 reload"
+  iocage exec ${JAIL_NAME} /root/.acme.sh/acme.sh --issue ${TEST_CERT} --home "/root/.acme.sh" -d ${HOST_NAME} -w /usr/local/www/nextcloud -k 4096 --fullchain-file /usr/local/etc/pki/tls/certs/fullchain.pem --key-file /usr/local/etc/pki/tls/private/privkey.pem --reloadcmd "service nginx reload"
 fi
 
 # CLI installation and configuration of Nextcloud
 iocage exec ${JAIL_NAME} touch /var/log/nextcloud.log
 iocage exec ${JAIL_NAME} chown www /var/log/nextcloud.log
-iocage exec ${JAIL_NAME} su -m www -c "php /usr/local/www/apache24/data/nextcloud/occ maintenance:install --database=\"mysql\" --database-name=\"nextcloud\" --database-user=\"nextcloud\" --database-pass=\"${DB_PASSWORD}\" --database-host=\"localhost:/tmp/mysql.sock\" --admin-user=\"admin\" --admin-pass=\"${ADMIN_PASSWORD}\" --data-dir=\"/mnt/files\""
-iocage exec ${JAIL_NAME} su -m www -c "php /usr/local/www/apache24/data/nextcloud/occ config:system:set logtimezone --value=\"${TIME_ZONE}\""
-iocage exec ${JAIL_NAME} su -m www -c 'php /usr/local/www/apache24/data/nextcloud/occ config:system:set log_type --value="file"'
-iocage exec ${JAIL_NAME} su -m www -c 'php /usr/local/www/apache24/data/nextcloud/occ config:system:set logfile --value="/var/log/nextcloud.log"'
-iocage exec ${JAIL_NAME} su -m www -c 'php /usr/local/www/apache24/data/nextcloud/occ config:system:set loglevel --value="2"'
-iocage exec ${JAIL_NAME} su -m www -c 'php /usr/local/www/apache24/data/nextcloud/occ config:system:set logrotate_size --value="104847600"'
-iocage exec ${JAIL_NAME} su -m www -c 'php /usr/local/www/apache24/data/nextcloud/occ config:system:set memcache.local --value="\OC\Memcache\APCu"'
-iocage exec ${JAIL_NAME} su -m www -c 'php /usr/local/www/apache24/data/nextcloud/occ config:system:set memcache.locking --value="\OC\Memcache\Redis"'
-iocage exec ${JAIL_NAME} su -m www -c 'php /usr/local/www/apache24/data/nextcloud/occ config:system:set redis host --value="/tmp/redis.sock"'
-iocage exec ${JAIL_NAME} su -m www -c 'php /usr/local/www/apache24/data/nextcloud/occ config:system:set redis port --value=0 --type=integer'
-iocage exec ${JAIL_NAME} su -m www -c 'php /usr/local/www/apache24/data/nextcloud/occ config:system:set htaccess.RewriteBase --value="/"'
-iocage exec ${JAIL_NAME} su -m www -c 'php /usr/local/www/apache24/data/nextcloud/occ maintenance:update:htaccess'
-iocage exec ${JAIL_NAME} su -m www -c "php /usr/local/www/apache24/data/nextcloud/occ config:system:set trusted_domains 1 --value=\"${HOST_NAME}\""
-iocage exec ${JAIL_NAME} su -m www -c "php /usr/local/www/apache24/data/nextcloud/occ config:system:set trusted_domains 2 --value=\"${JAIL_IP}\""
-iocage exec ${JAIL_NAME} su -m www -c 'php /usr/local/www/apache24/data/nextcloud/occ app:enable encryption'
-iocage exec ${JAIL_NAME} su -m www -c 'php /usr/local/www/apache24/data/nextcloud/occ encryption:enable'
-iocage exec ${JAIL_NAME} su -m www -c 'php /usr/local/www/apache24/data/nextcloud/occ encryption:disable'
-iocage exec ${JAIL_NAME} su -m www -c 'php /usr/local/www/apache24/data/nextcloud/occ background:cron'
+iocage exec ${JAIL_NAME} su -m www -c "php /usr/local/www/nextcloud/occ maintenance:install --database=\"mysql\" --database-name=\"nextcloud\" --database-user=\"nextcloud\" --database-pass=\"${DB_PASSWORD}\" --database-host=\"localhost:/tmp/mysql.sock\" --admin-user=\"admin\" --admin-pass=\"${ADMIN_PASSWORD}\" --data-dir=\"/mnt/files\""
+iocage exec ${JAIL_NAME} su -m www -c "php /usr/local/www/nextcloud/occ config:system:set logtimezone --value=\"${TIME_ZONE}\""
+iocage exec ${JAIL_NAME} su -m www -c 'php /usr/local/www/nextcloud/occ config:system:set log_type --value="file"'
+iocage exec ${JAIL_NAME} su -m www -c 'php /usr/local/www/nextcloud/occ config:system:set logfile --value="/var/log/nextcloud.log"'
+iocage exec ${JAIL_NAME} su -m www -c 'php /usr/local/www/nextcloud/occ config:system:set loglevel --value="2"'
+iocage exec ${JAIL_NAME} su -m www -c 'php /usr/local/www/nextcloud/occ config:system:set logrotate_size --value="104847600"'
+iocage exec ${JAIL_NAME} su -m www -c 'php /usr/local/www/nextcloud/occ config:system:set memcache.local --value="\OC\Memcache\APCu"'
+iocage exec ${JAIL_NAME} su -m www -c 'php /usr/local/www/nextcloud/occ config:system:set memcache.locking --value="\OC\Memcache\Redis"'
+iocage exec ${JAIL_NAME} su -m www -c 'php /usr/local/www/nextcloud/occ config:system:set redis host --value="/tmp/redis.sock"'
+iocage exec ${JAIL_NAME} su -m www -c 'php /usr/local/www/nextcloud/occ config:system:set redis port --value=0 --type=integer'
+iocage exec ${JAIL_NAME} su -m www -c "php /usr/local/www/nextcloud/occ config:system:set trusted_domains 1 --value=\"${HOST_NAME}\""
+iocage exec ${JAIL_NAME} su -m www -c "php /usr/local/www/nextcloud/occ config:system:set trusted_domains 2 --value=\"${JAIL_IP}\""
+iocage exec ${JAIL_NAME} su -m www -c 'php /usr/local/www/nextcloud/occ app:enable encryption'
+iocage exec ${JAIL_NAME} su -m www -c 'php /usr/local/www/nextcloud/occ encryption:enable'
+iocage exec ${JAIL_NAME} su -m www -c 'php /usr/local/www/nextcloud/occ encryption:disable'
+iocage exec ${JAIL_NAME} su -m www -c 'php /usr/local/www/nextcloud/occ background:cron'
 iocage exec ${JAIL_NAME} crontab -u www /mnt/configs/www-crontab
 
 # Don't need /mnt/configs any more, so unmount it

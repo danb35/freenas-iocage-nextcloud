@@ -85,6 +85,21 @@ if [ -z $PORTS_PATH ]; then
   PORTS_PATH="${POOL_PATH}/portsnap"
 fi
 
+# Sanity check DB_PATH, FILES_PATH, and PORTS_PATH -- they all have to be different,
+# and can't be the same as POOL_PATH
+if [ "${DB_PATH}" = "${FILES_PATH}" ] || [ "${FILES_PATH}" = "${PORTS_PATH}" ] || [ "${PORTS_PATH}" = "${DB_PATH}" ]
+then
+  echo "DB_PATH, FILES_PATH, and PORTS_PATH must all be different!"
+  exit 1
+fi
+
+if [ "${DB_PATH}" = "${POOL_PATH}" ] || [ "${FILES_PATH}" = "${POOL_PATH}" ] || [ "${PORTS_PATH}" = "${POOL_PATH}" ] 
+then
+  echo "DB_PATH, FILES_PATH, and PORTS_PATH must all be different"
+  echo "from POOL_PATH!"
+  exit 1
+fi
+
 cat <<__EOF__ >/tmp/pkg.json
 {
   "pkgs":[

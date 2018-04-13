@@ -100,6 +100,14 @@ then
   exit 1
 fi
 
+# Make sure DB_PATH is empty -- if not, MariaDB will choke
+if [ "$(ls -A $DB_PATH)" ]; then
+  echo "$DB_PATH is not empty!"
+  echo "DB_PATH must be empty, otherwise this script will break your existing database."
+  exit 1
+fi
+
+
 cat <<__EOF__ >/tmp/pkg.json
 {
   "pkgs":[

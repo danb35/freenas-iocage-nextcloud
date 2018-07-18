@@ -246,3 +246,22 @@ echo "Database password = ${DB_PASSWORD}"
 echo "The MariaDB root password is ${DB_ROOT_PASSWORD}"
 echo ""
 echo "All passwords are saved in /root/db_password.txt"
+echo ""
+if [ $TEST_CERT = "--test" ] && [ $STANDALONE_CERT -eq 1 ]; then
+  echo "You have obtained your Let's Encrypt certificate using the staging server."
+  echo "This certificate will not be trusted by your browser and will cause SSL errors"
+  echo "when you connect.  Once you've verified that everything else is working"
+  echo "correctly, you should issue a trusted certificate.  To do this, run:"
+  echo "iocage console ${JAIL_NAME}"
+  echo "acme.sh --issue -d ${HOST_NAME} --force -w /usr/local/www/apache24/data -k 4096 --fullchain-file /usr/local/etc/pki/tls/certs/fullchain.pem --key-file /usr/local/etc/pki/tls/private/privkey.pem --reloadcmd \"service apache24 reload\""
+  echo ""
+elif [ $TEST_CERT = "--test" ] && [ $DNS_CERT -eq 1 ]; then
+  echo "You have obtained your Let's Encrypt certificate using the staging server."
+  echo "This certificate will not be trusted by your browser and will cause SSL errors"
+  echo "when you connect.  Once you've verified that everything else is working"
+  echo "correctly, you should issue a trusted certificate.  To do this, run:"
+  echo "iocage console ${JAIL_NAME}"
+  echo "Then reissue your certificate using DNS validation."
+  echo ""
+fi
+

@@ -11,6 +11,8 @@ cd /tmp
 git clone --recursive https://github.com/iocage/iocage
 cp -R iocage/iocage/lib/ /usr/local/lib/python3.6/site-packages/iocage/lib
 ```
+This script also appears to work without issue on FreeNAS 11.2-BETA1.
+
 ## Usage
 
 ### Prerequisites

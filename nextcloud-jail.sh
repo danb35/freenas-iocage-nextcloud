@@ -118,7 +118,7 @@ cat <<__EOF__ >/tmp/pkg.json
   "php72-session","php72-mysqli","php72-wddx","php72-xsl","php72-filter",
   "php72-curl","php72-fileinfo","php72-bz2","php72-intl","php72-openssl",
   "php72-ldap","php72-ftp","php72-imap","php72-exif","php72-gmp",
-  "php72-memcache","php72-opcache","php72-pcntl","php72","bash",
+  "php72-memcache","php72-opcache","php72-pcntl","php72","bash","perl5.28",
   "p5-Locale-gettext","help2man","texinfo","m4","autoconf","socat","git"
   ]
 }

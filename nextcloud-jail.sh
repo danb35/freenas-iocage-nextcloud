@@ -23,6 +23,7 @@ PORTS_PATH=""
 STANDALONE_CERT=0
 DNS_CERT=0
 SELFSIGNED_CERT=0
+NO_CERT=0
 TEST_CERT="--test"
 
 SCRIPT=$(readlink -f "$0")
@@ -64,8 +65,8 @@ if [ -z $HOST_NAME ]; then
   echo 'Configuration error: HOST_NAME must be set'
   exit 1
 fi
-if [ $STANDALONE_CERT -eq 0 ] && [ $DNS_CERT -eq 0 ] && [ $SELFSIGNED_CERT -eq 0 ]; then
-  echo 'Configuration error: Either STANDALONE_CERT, DNS_CERT, or'
+if [ $STANDALONE_CERT -eq 0 ] && [ $DNS_CERT -eq 0 ] && [ $SELFSIGNED_CERT -eq 0 ] &&  [ $NO_CERT -eq 0 ] ; then
+  echo 'Configuration error: Either STANDALONE_CERT, DNS_CERT, NO_CERT'
   echo 'SELFSIGNED_CERT must be set to 1.'
   exit 1
 fi
@@ -182,7 +183,11 @@ iocage exec ${JAIL_NAME} cp -f /mnt/configs/httpd.conf /usr/local/etc/apache24/h
 iocage exec ${JAIL_NAME} cp -f /mnt/configs/php.ini /usr/local/etc/php.ini
 iocage exec ${JAIL_NAME} cp -f /mnt/configs/redis.conf /usr/local/etc/redis.conf
 iocage exec ${JAIL_NAME} cp -f /mnt/configs/001_mod_php.conf /usr/local/etc/apache24/modules.d/001_mod_php.conf
-iocage exec ${JAIL_NAME} cp -f /mnt/configs/nextcloud.conf /usr/local/etc/apache24/Includes/${HOST_NAME}.conf
+if [ $NO_CERT -eq 1 ]; then
+  iocage exec ${JAIL_NAME} cp -f /mnt/configs/nextcloud-nossl.conf /usr/local/etc/apache24/Includes/${HOST_NAME}.conf
+else
+  iocage exec ${JAIL_NAME} cp -f /mnt/configs/nextcloud.conf /usr/local/etc/apache24/Includes/${HOST_NAME}.conf
+fi
 iocage exec ${JAIL_NAME} cp -f /mnt/configs/www.conf /usr/local/etc/php-fpm.d/
 iocage exec ${JAIL_NAME} cp -f /usr/local/share/mysql/my-small.cnf /var/db/mysql/my.cnf
 iocage exec ${JAIL_NAME} sed -i '' "s/yourhostnamehere/${HOST_NAME}/" /usr/local/etc/apache24/Includes/${HOST_NAME}.conf

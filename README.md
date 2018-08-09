@@ -31,11 +31,14 @@ TIME_ZONE="America/New_York" # See http://php.net/manual/en/timezones.php
 HOST_NAME="YOUR_FQDN"
 STANDALONE_CERT=0
 DNS_CERT=0
+SELFSIGNED_CERT=0
 TEST_CERT="--test"
 ```
 Many of the options are self-explanatory, and all should be adjusted to suit your needs.  JAIL_IP and DEFAULT_GW_IP are the IP address and default gateway, respectively, for your jail.  INTERFACE is the network interface that your FreeNAS server is actually using.  If you have multiple interfaces, run `ifconfig` and see which one has an IP address, and enter that one here. If you want to use a virtual non-shared IP, pick a unused name as your interface and set VNET to ''on''  POOL_PATH is the path for your data pool, on which the Nextcloud user data and MariaDB database will be stored.  JAIL_NAME is the name of the jail, and wouldn't ordinarily need to be changed.  If you don't specify it in nextcloud-config, JAIL_NAME will default to "nextcloud".  TIME_ZONE is the time zone of your location, as PHP sees it--see the [PHP manual](http://php.net/manual/en/timezones.php) for a list of all valid time zones.
 
 HOST_NAME is the fully-qualified domain name you want to assign to your installation.  You must own (or at least control) this domain, because Let's Encrypt will test that control.  STANDALONE_CERT and DNS_CERT control which validation method Let's Encrypt will use to do this.  If HOST_NAME is accessible to the outside world--that is, you have ports 80 and 443 (at least) forwarded to your jail, so that if an outside user browses to http://HOST_NAME/, he'll reach your jail--set STANDALONE_CERT to 1, and DNS_CERT to 0.  If HOST_NAME is not accessible to the outside world, but your DNS provider has an API that allows you to make automated changes, set DNS_CERT to 1, and STANDALONE_CERT to 0.  In that case, you'll also need to copy `configs/acme_dns_issue.sh_orig` to `configs/acme_dns_issue.sh`, edit its contents appropriately, and make it executable (`chmod +x configs/acme_dns_issue.sh`).
+
+If you are unable or unwilling to use a Let's Encrypt certificate, you can instead create a self-signed certificate by setting SELFSIGNED_CERT to 1.  If you want to provide your own certificate (from another certificate authority, or from Cloudflare, for example), you should also set SELFSIGNED_CERT to 1, and then replace the self-signed certificate with your own certificate once the jail is created.
 
 DB_PATH, FILES_PATH, and PORTS_PATH can optionally be set to individual paths for your MariaDB database, your Nextcloud files, and your FreeBSD ports collection.  If not set, they'll default to $POOL_PATH/db, $POOL_PATH/files, and $POOL_PATH/portsnap, respectively.  These do not need to be set in nextcloud-config, and **should not be set** unless you want the MariaDB database, your Nextcloud files, and/or your ports collection to be in a non-standard location.
 

@@ -248,7 +248,11 @@ iocage fstab -r ${JAIL_NAME} ${CONFIGS_PATH} /mnt/configs nullfs rw 0 0
 
 # Done!
 echo "Installation complete!"
-echo "Using your web browser, go to https://${HOST_NAME} to log in"
+if [ $NO_CERT -eq 1 ]; then
+  echo "Using your web browser, go to http://${HOST_NAME} to log in"
+else
+  echo "Using your web browser, go to https://${HOST_NAME} to log in"
+fi
 echo "Default user is admin, password is ${ADMIN_PASSWORD}"
 echo ""
 echo "Database Information"

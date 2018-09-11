@@ -22,6 +22,8 @@ FILES_PATH=""
 PORTS_PATH=""
 STANDALONE_CERT=0
 DNS_CERT=0
+SELFSIGNED_CERT=0
+NO_CERT=0
 TEST_CERT="--test"
 
 SCRIPT=$(readlink -f "$0")
@@ -63,9 +65,9 @@ if [ -z $HOST_NAME ]; then
   echo 'Configuration error: HOST_NAME must be set'
   exit 1
 fi
-if [ $STANDALONE_CERT -eq 0 ] && [ $DNS_CERT -eq 0 ]; then
-  echo 'Configuration error: Either STANDALONE_CERT or DNS_CERT'
-  echo 'must be set to 1.'
+if [ $STANDALONE_CERT -eq 0 ] && [ $DNS_CERT -eq 0 ] && [ $SELFSIGNED_CERT -eq 0 ] &&  [ $NO_CERT -eq 0 ] ; then
+  echo 'Configuration error: Either STANDALONE_CERT, DNS_CERT, NO_CERT'
+  echo 'SELFSIGNED_CERT must be set to 1.'
   exit 1
 fi
 if [ $DNS_CERT -eq 1 ] && ! [ -x $CONFIGS_PATH/acme_dns_issue.sh ]; then
@@ -157,17 +159,23 @@ iocage exec ${JAIL_NAME} make -C /usr/ports/databases/pecl-redis clean install B
 iocage exec ${JAIL_NAME} make -C /usr/ports/devel/pecl-APCu clean install BATCH=yes
 iocage exec ${JAIL_NAME} mkdir -p /usr/local/etc/pki/tls/certs/
 iocage exec ${JAIL_NAME} mkdir -p /usr/local/etc/pki/tls/private/
-iocage exec ${JAIL_NAME} touch /usr/local/etc/pki/tls/private/privkey.pem
-iocage exec ${JAIL_NAME} chmod 600 /usr/local/etc/pki/tls/private/privkey.pem
-iocage exec ${JAIL_NAME} curl https://get.acme.sh -o /tmp/get-acme.sh
-iocage exec ${JAIL_NAME} sh /tmp/get-acme.sh
-iocage exec ${JAIL_NAME} rm /tmp/get-acme.sh
+if [ $STANDALONE_CERT -eq 1 ] || [ $DNS_CERT -eq 1 ]; then
+  iocage exec ${JAIL_NAME} touch /usr/local/etc/pki/tls/private/privkey.pem
+  iocage exec ${JAIL_NAME} chmod 600 /usr/local/etc/pki/tls/private/privkey.pem
+  iocage exec ${JAIL_NAME} curl https://get.acme.sh -o /tmp/get-acme.sh
+  iocage exec ${JAIL_NAME} sh /tmp/get-acme.sh
+  iocage exec ${JAIL_NAME} rm /tmp/get-acme.sh
 
-# Issue certificate.  If standalone mode is selected, issue directly, otherwise call external script to issue cert via DNS validation
-if [ $STANDALONE_CERT -eq 1 ]; then
-  iocage exec ${JAIL_NAME} /root/.acme.sh/acme.sh --issue ${TEST_CERT} --home "/root/.acme.sh" --standalone -d ${HOST_NAME} -k 4096 --fullchain-file /usr/local/etc/pki/tls/certs/fullchain.pem --key-file /usr/local/etc/pki/tls/private/privkey.pem --reloadcmd "service apache24 reload"
-elif [ $DNS_CERT -eq 1 ]; then
-  iocage exec ${JAIL_NAME} /mnt/configs/acme_dns_issue.sh
+  # Issue certificate.  If standalone mode is selected, issue directly, otherwise call external script to issue cert via DNS validation
+  if [ $STANDALONE_CERT -eq 1 ]; then
+    iocage exec ${JAIL_NAME} /root/.acme.sh/acme.sh --issue ${TEST_CERT} --home "/root/.acme.sh" --standalone -d ${HOST_NAME} -k 4096 --fullchain-file /usr/local/etc/pki/tls/certs/fullchain.pem --key-file /usr/local/etc/pki/tls/private/privkey.pem --reloadcmd "service apache24 reload"
+  elif [ $DNS_CERT -eq 1 ]; then
+    iocage exec ${JAIL_NAME} /mnt/configs/acme_dns_issue.sh
+  fi
+elif [ $SELFSIGNED_CERT -eq 1 ]; then
+  openssl req -new -newkey rsa:4096 -days 3650 -nodes -x509 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=${HOST_NAME}" -keyout ${CONFIGS_PATH}/privkey.pem  -out ${CONFIGS_PATH}/fullchain.pem
+  iocage exec ${JAIL_NAME} cp /mnt/configs/privkey.pem /usr/local/etc/pki/tls/private/privkey.pem
+  iocage exec ${JAIL_NAME} cp /mnt/configs/fullchain.pem /usr/local/etc/pki/tls/certs/fullchain.pem
 fi
 
 # Copy and edit pre-written config files
@@ -175,7 +183,11 @@ iocage exec ${JAIL_NAME} cp -f /mnt/configs/httpd.conf /usr/local/etc/apache24/h
 iocage exec ${JAIL_NAME} cp -f /mnt/configs/php.ini /usr/local/etc/php.ini
 iocage exec ${JAIL_NAME} cp -f /mnt/configs/redis.conf /usr/local/etc/redis.conf
 iocage exec ${JAIL_NAME} cp -f /mnt/configs/001_mod_php.conf /usr/local/etc/apache24/modules.d/001_mod_php.conf
-iocage exec ${JAIL_NAME} cp -f /mnt/configs/nextcloud.conf /usr/local/etc/apache24/Includes/${HOST_NAME}.conf
+if [ $NO_CERT -eq 1 ]; then
+  iocage exec ${JAIL_NAME} cp -f /mnt/configs/nextcloud-nossl.conf /usr/local/etc/apache24/Includes/${HOST_NAME}.conf
+else
+  iocage exec ${JAIL_NAME} cp -f /mnt/configs/nextcloud.conf /usr/local/etc/apache24/Includes/${HOST_NAME}.conf
+fi
 iocage exec ${JAIL_NAME} cp -f /mnt/configs/www.conf /usr/local/etc/php-fpm.d/
 iocage exec ${JAIL_NAME} cp -f /usr/local/share/mysql/my-small.cnf /var/db/mysql/my.cnf
 iocage exec ${JAIL_NAME} sed -i '' "s/yourhostnamehere/${HOST_NAME}/" /usr/local/etc/apache24/Includes/${HOST_NAME}.conf
@@ -236,7 +248,11 @@ iocage fstab -r ${JAIL_NAME} ${CONFIGS_PATH} /mnt/configs nullfs rw 0 0
 
 # Done!
 echo "Installation complete!"
-echo "Using your web browser, go to https://${HOST_NAME} to log in"
+if [ $NO_CERT -eq 1 ]; then
+  echo "Using your web browser, go to http://${HOST_NAME} to log in"
+else
+  echo "Using your web browser, go to https://${HOST_NAME} to log in"
+fi
 echo "Default user is admin, password is ${ADMIN_PASSWORD}"
 echo ""
 echo "Database Information"
@@ -264,4 +280,13 @@ elif [ $TEST_CERT = "--test" ] && [ $DNS_CERT -eq 1 ]; then
   echo "Then reissue your certificate using DNS validation."
   echo ""
 fi
-
+if [ $SELFSIGNED_CERT -eq 1 ]; then
+  echo "You have chosen to create a self-signed TLS certificate for your Nextcloud"
+  echo "installation.  This certificate will not be trusted by your browser and"
+  echo "will cause SSL errors when you connect.  If you wish to replace this certificate"
+  echo "with one obtained elsewhere, the private key is located at:"
+  echo "/usr/local/etc/pki/tls/private/privkey.pem"
+  echo "The full chain (server + intermediate certificates together) is at:"
+  echo "/usr/local/etc/pki/tls/certs/fullchain.pem"
+  echo ""
+fi

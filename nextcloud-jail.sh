@@ -173,7 +173,7 @@ if [ $STANDALONE_CERT -eq 1 ] || [ $DNS_CERT -eq 1 ]; then
     iocage exec ${JAIL_NAME} /mnt/configs/acme_dns_issue.sh
   fi
 elif [ $SELFSIGNED_CERT -eq 1 ]; then
-  openssl req -new -newkey rsa:4096 -days 3650 -nodes -x509 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=${HOST_NAME}" -keyout ${CONF_DIR}/privkey.pem  -out ${CONF_DIR}/fullchain.pem
+  openssl req -new -newkey rsa:4096 -days 3650 -nodes -x509 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=${HOST_NAME}" -keyout ${CONFIGS_PATH}/privkey.pem  -out ${CONFIGS_PATH}/fullchain.pem
   iocage exec ${JAIL_NAME} cp /mnt/configs/privkey.pem /usr/local/etc/pki/tls/private/privkey.pem
   iocage exec ${JAIL_NAME} cp /mnt/configs/fullchain.pem /usr/local/etc/pki/tls/certs/fullchain.pem
 fi

@@ -1,5 +1,5 @@
 #!/bin/sh
-# Build an iocage jail under FreeNAS 11.1 using the current release of Nextcloud 13
+# Build an iocage jail under FreeNAS 11.1 using the current release of Nextcloud 14
 # https://github.com/danb35/freenas-iocage-nextcloud
 
 # Check for root privileges
@@ -31,6 +31,7 @@ CONFIGS_PATH=$SCRIPTPATH/configs
 DB_ROOT_PASSWORD=$(openssl rand -base64 16)
 DB_PASSWORD=$(openssl rand -base64 16)
 ADMIN_PASSWORD=$(openssl rand -base64 12)
+RELEASE=$(freebsd-version | sed "s/STABLE/RELEASE/g")
 
 # Check for nextcloud-config and set configuration
 if ! [ -e $SCRIPTPATH/nextcloud-config ]; then
@@ -119,12 +120,12 @@ cat <<__EOF__ >/tmp/pkg.json
   "php72-curl","php72-fileinfo","php72-bz2","php72-intl","php72-openssl",
   "php72-ldap","php72-ftp","php72-imap","php72-exif","php72-gmp",
   "php72-memcache","php72-opcache","php72-pcntl","php72","bash","perl5.28",
-  "p5-Locale-gettext","help2man","texinfo","m4","autoconf","socat","git"
+  "p5-Locale-gettext","help2man","texinfo","m4","autoconf","socat","git","apache24"
   ]
 }
 __EOF__
 
-iocage create --name "${JAIL_NAME}" -p /tmp/pkg.json -r 11.1-RELEASE ip4_addr="${INTERFACE}|${JAIL_IP}/24" defaultrouter="${DEFAULT_GW_IP}" boot="on" host_hostname="${JAIL_NAME}" vnet="${VNET}"
+iocage create --name "${JAIL_NAME}" -p /tmp/pkg.json -r $RELEASE ip4_addr="${INTERFACE}|${JAIL_IP}/24" defaultrouter="${DEFAULT_GW_IP}" boot="on" host_hostname="${JAIL_NAME}" vnet="${VNET}"
 rm /tmp/pkg.json
 
 mkdir -p ${DB_PATH}/
@@ -145,7 +146,7 @@ iocage exec ${JAIL_NAME} chown -R www:www /mnt/files
 iocage exec ${JAIL_NAME} chmod -R 770 /mnt/files
 iocage exec ${JAIL_NAME} "if [ -z /usr/ports ]; then portsnap fetch extract; else portsnap auto; fi"
 iocage exec ${JAIL_NAME} chsh -s /usr/local/bin/bash root
-iocage exec ${JAIL_NAME} make -C /usr/ports/www/apache24 clean install BATCH=yes
+#iocage exec ${JAIL_NAME} make -C /usr/ports/www/apache24 clean install BATCH=yes
 iocage exec ${JAIL_NAME} fetch -o /tmp https://download.nextcloud.com/server/releases/latest-14.tar.bz2
 iocage exec ${JAIL_NAME} tar xjf /tmp/latest-14.tar.bz2 -C /usr/local/www/apache24/data/
 iocage exec ${JAIL_NAME} chown -R www:www /usr/local/www/apache24/data/nextcloud/

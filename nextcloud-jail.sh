@@ -219,9 +219,9 @@ iocage exec ${JAIL_NAME} cp -f /mnt/configs/my.cnf /root/.my.cnf
 iocage exec ${JAIL_NAME} sed -i '' "s|mypassword|${DB_ROOT_PASSWORD}|" /root/.my.cnf
 
 # Save passwords for later reference
-iocage exec ${JAIL_NAME} echo "MySQL root password is ${DB_ROOT_PASSWORD}" > /root/db_password.txt
-iocage exec ${JAIL_NAME} echo "Nextcloud database password is ${DB_PASSWORD}" >> /root/db_password.txt
-iocage exec ${JAIL_NAME} echo "Nextcloud Administrator password is ${ADMIN_PASSWORD}" >> /root/db_password.txt
+iocage exec ${JAIL_NAME} echo "MySQL root password is ${DB_ROOT_PASSWORD}" > /root/${JAIL_NAME}_db_password.txt
+iocage exec ${JAIL_NAME} echo "Nextcloud database password is ${DB_PASSWORD}" >> /${JAIL_NAME}_root/db_password.txt
+iocage exec ${JAIL_NAME} echo "Nextcloud Administrator password is ${ADMIN_PASSWORD}" >> /root/${JAIL_NAME}_db_password.txt
 
 # If standalone mode was used to issue certificate, reissue using webroot
 if [ $STANDALONE_CERT -eq 1 ]; then
@@ -270,7 +270,7 @@ echo "Database user = nextcloud"
 echo "Database password = ${DB_PASSWORD}"
 echo "The MariaDB root password is ${DB_ROOT_PASSWORD}"
 echo ""
-echo "All passwords are saved in /root/db_password.txt"
+echo "All passwords are saved in /root/${JAIL_NAME}_db_password.txt"
 echo ""
 if [ $TEST_CERT = "--test" ] && [ $STANDALONE_CERT -eq 1 ]; then
   echo "You have obtained your Let's Encrypt certificate using the staging server."

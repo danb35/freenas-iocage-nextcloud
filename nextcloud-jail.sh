@@ -121,7 +121,7 @@ cat <<__EOF__ >/tmp/pkg.json
   "php72-session","php72-mysqli","php72-wddx","php72-xsl","php72-filter",
   "php72-curl","php72-fileinfo","php72-bz2","php72-intl","php72-openssl",
   "php72-ldap","php72-ftp","php72-imap","php72-exif","php72-gmp",
-  "php72-memcache","php72-opcache","php72-pcntl","php72","bash","perl5.28",
+  "php72-memcache","php72-opcache","php72-pcntl","php72","bash","perl5",
   "p5-Locale-gettext","help2man","texinfo","m4","autoconf","socat","git","apache24"
   ]
 }
@@ -129,6 +129,14 @@ __EOF__
 
 iocage create --name "${JAIL_NAME}" -p /tmp/pkg.json -r ${RELEASE} ip4_addr="${INTERFACE}|${JAIL_IP}/24" defaultrouter="${DEFAULT_GW_IP}" boot="on" host_hostname="${JAIL_NAME}" vnet="${VNET}"
 rm /tmp/pkg.json
+
+# fix 'libdl.so.1 missing' error in 11.1 versions, by reinstalling packages from older FreeBSD release
+# source: https://forums.freenas.org/index.php?threads/openvpn-fails-in-jail-with-libdl-so-1-not-found-error.70391/
+if [ "${RELEASE}" = "11.1-RELEASE" ]; then
+  iocage exec ${JAIL_NAME} sed -i '' "s/quarterly/release_2/" /etc/pkg/FreeBSD.conf
+  iocage exec ${JAIL_NAME} pkg update -f
+  iocage exec ${JAIL_NAME} pkg upgrade -yf
+fi
 
 mkdir -p ${DB_PATH}/
 chown -R 88:88 ${DB_PATH}/

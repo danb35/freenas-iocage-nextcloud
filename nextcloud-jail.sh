@@ -17,6 +17,7 @@ POOL_PATH=""
 JAIL_NAME="nextcloud"
 TIME_ZONE=""
 HOST_NAME=""
+DATABASE="mariadb"
 DB_PATH=""
 FILES_PATH=""
 PORTS_PATH=""
@@ -26,12 +27,18 @@ SELFSIGNED_CERT=0
 NO_CERT=0
 TEST_CERT="--test"
 
+
 SCRIPT=$(readlink -f "$0")
 SCRIPTPATH=$(dirname "$SCRIPT")
 . $SCRIPTPATH/nextcloud-config
 CONFIGS_PATH=$SCRIPTPATH/configs
 DB_ROOT_PASSWORD=$(openssl rand -base64 16)
 DB_PASSWORD=$(openssl rand -base64 16)
+if [ "${DATABASE}" = "mariadb" ]; then
+  DB_NAME="MariaDB"
+elif [ "${DATABASE}" = "pgsql" ]; then
+  DB_NAME="PostgreSQL"
+fi
 ADMIN_PASSWORD=$(openssl rand -base64 12)
 RELEASE=$(freebsd-version | sed "s/STABLE/RELEASE/g")
 
@@ -96,14 +103,14 @@ then
   exit 1
 fi
 
-if [ "${DB_PATH}" = "${POOL_PATH}" ] || [ "${FILES_PATH}" = "${POOL_PATH}" ] || [ "${PORTS_PATH}" = "${POOL_PATH}" ] 
+if [ "${DB_PATH}" = "${POOL_PATH}" ] || [ "${FILES_PATH}" = "${POOL_PATH}" ] || [ "${PORTS_PATH}" = "${POOL_PATH}" ]
 then
   echo "DB_PATH, FILES_PATH, and PORTS_PATH must all be different"
   echo "from POOL_PATH!"
   exit 1
 fi
 
-# Make sure DB_PATH is empty -- if not, MariaDB will choke
+# Make sure DB_PATH is empty -- if not, MariaDB/PostgreSQL will choke
 if [ "$(ls -A $DB_PATH)" ]; then
   echo "$DB_PATH is not empty!"
   echo "DB_PATH must be empty, otherwise this script will break your existing database."
@@ -114,11 +121,11 @@ fi
 cat <<__EOF__ >/tmp/pkg.json
 {
   "pkgs":[
-  "nano","curl","sudo","mariadb101-server","redis","php72-ctype",
+  "nano","curl","sudo","redis","php72-ctype",
   "php72-dom","php72-gd","php72-iconv","php72-json","php72-mbstring",
   "php72-posix","php72-simplexml","php72-xmlreader","php72-xmlwriter",
-  "php72-zip","php72-zlib","php72-pdo_mysql","php72-hash","php72-xml",
-  "php72-session","php72-mysqli","php72-wddx","php72-xsl","php72-filter",
+  "php72-zip","php72-zlib","php72-hash","php72-xml",
+  "php72-session","php72-wddx","php72-xsl","php72-filter",
   "php72-curl","php72-fileinfo","php72-bz2","php72-intl","php72-openssl",
   "php72-ldap","php72-ftp","php72-imap","php72-exif","php72-gmp",
   "php72-memcache","php72-opcache","php72-pcntl","php72","bash","perl5",
@@ -137,7 +144,11 @@ if [ "${RELEASE}" = "11.1-RELEASE" ]; then
   iocage exec ${JAIL_NAME} pkg update -f
   iocage exec ${JAIL_NAME} pkg upgrade -yf
 fi
-
+if [ "${DATABASE}" = "mariadb" ]; then
+  iocage exec ${JAIL_NAME} pkg install -qy mariadb101-server php72-pdo_mysql php72-mysqli
+elif [ "${DATABASE}" = "pgsql" ]; then
+  iocage exec ${JAIL_NAME} pkg install -qy postgresql10-server
+fi
 mkdir -p ${DB_PATH}/
 chown -R 88:88 ${DB_PATH}/
 mkdir -p ${FILES_PATH}
@@ -145,12 +156,20 @@ chown -R 80:80 ${FILES_PATH}
 mkdir -p ${PORTS_PATH}/ports
 mkdir -p ${PORTS_PATH}/db
 iocage exec ${JAIL_NAME} mkdir -p /mnt/files
-iocage exec ${JAIL_NAME} mkdir -p /var/db/mysql
+if [ "${DATABASE}" = "mariadb" ]; then
+  iocage exec ${JAIL_NAME} mkdir -p /var/db/mysql
+elif [ "${DATABASE}" = "pgsql" ]; then
+  iocage exec ${JAIL_NAME} mkdir -p /var/db/postgres
+fi
 iocage exec ${JAIL_NAME} mkdir -p /mnt/configs
 iocage fstab -a ${JAIL_NAME} ${PORTS_PATH}/ports /usr/ports nullfs rw 0 0
 iocage fstab -a ${JAIL_NAME} ${PORTS_PATH}/db /var/db/portsnap nullfs rw 0 0
 iocage fstab -a ${JAIL_NAME} ${FILES_PATH} /mnt/files nullfs rw 0 0
-iocage fstab -a ${JAIL_NAME} ${DB_PATH}  /var/db/mysql  nullfs  rw  0  0
+if [ "${DATABASE}" = "mariadb" ]; then
+  iocage fstab -a ${JAIL_NAME} ${DB_PATH}  /var/db/mysql  nullfs  rw  0  0
+elif [ "${DATABASE}" = "pgsql" ]; then
+  iocage fstab -a ${JAIL_NAME} ${DB_PATH}  /var/db/postgres  nullfs  rw  0  0
+fi
 iocage fstab -a ${JAIL_NAME} ${CONFIGS_PATH} /mnt/configs nullfs rw 0 0
 iocage exec ${JAIL_NAME} chown -R www:www /mnt/files
 iocage exec ${JAIL_NAME} chmod -R 770 /mnt/files
@@ -160,11 +179,19 @@ iocage exec ${JAIL_NAME} fetch -o /tmp https://download.nextcloud.com/server/rel
 iocage exec ${JAIL_NAME} tar xjf /tmp/latest-14.tar.bz2 -C /usr/local/www/apache24/data/
 iocage exec ${JAIL_NAME} chown -R www:www /usr/local/www/apache24/data/nextcloud/
 iocage exec ${JAIL_NAME} sysrc apache24_enable="YES"
-iocage exec ${JAIL_NAME} sysrc mysql_enable="YES"
+if [ "${DATABASE}" = "mariadb" ]; then
+  iocage exec ${JAIL_NAME} sysrc mysql_enable="YES"
+elif [ "${DATABASE}" = "pgsql" ]; then
+  iocage exec ${JAIL_NAME} sysrc postgresql_enable="YES"
+fi
 iocage exec ${JAIL_NAME} sysrc redis_enable="YES"
 iocage exec ${JAIL_NAME} sysrc php_fpm_enable="YES"
 iocage exec ${JAIL_NAME} make -C /usr/ports/databases/pecl-redis clean install BATCH=yes
 iocage exec ${JAIL_NAME} make -C /usr/ports/devel/pecl-APCu clean install BATCH=yes
+if [ "${DATABASE}" = "pgsql" ]; then
+  iocage exec ${JAIL_NAME} make -C /usr/ports/databases/php72-pgsql clean install BATCH=yes
+  iocage exec ${JAIL_NAME} make -C /usr/ports/databases/php72-pdo_pgsql clean install BATCH=yes
+fi
 iocage exec ${JAIL_NAME} mkdir -p /usr/local/etc/pki/tls/certs/
 iocage exec ${JAIL_NAME} mkdir -p /usr/local/etc/pki/tls/private/
 if [ $STANDALONE_CERT -eq 1 ] || [ $DNS_CERT -eq 1 ]; then
@@ -197,29 +224,44 @@ else
   iocage exec ${JAIL_NAME} cp -f /mnt/configs/nextcloud.conf /usr/local/etc/apache24/Includes/${HOST_NAME}.conf
 fi
 iocage exec ${JAIL_NAME} cp -f /mnt/configs/www.conf /usr/local/etc/php-fpm.d/
-iocage exec ${JAIL_NAME} cp -f /usr/local/share/mysql/my-small.cnf /var/db/mysql/my.cnf
+if [ "${DATABASE}" = "mariadb" ]; then
+  iocage exec ${JAIL_NAME} cp -f /usr/local/share/mysql/my-small.cnf /var/db/mysql/my.cnf
+  iocage exec ${JAIL_NAME} sed -i '' "s/#skip-networking/skip-networking/" /var/db/mysql/my.cnf
+fi
 iocage exec ${JAIL_NAME} sed -i '' "s/yourhostnamehere/${HOST_NAME}/" /usr/local/etc/apache24/Includes/${HOST_NAME}.conf
 iocage exec ${JAIL_NAME} sed -i '' "s/jailiphere/${JAIL_IP}/" /usr/local/etc/apache24/Includes/${HOST_NAME}.conf
 iocage exec ${JAIL_NAME} sed -i '' "s/yourhostnamehere/${HOST_NAME}/" /usr/local/etc/apache24/httpd.conf
-iocage exec ${JAIL_NAME} sed -i '' "s/#skip-networking/skip-networking/" /var/db/mysql/my.cnf
 iocage exec ${JAIL_NAME} sed -i '' "s|mytimezone|${TIME_ZONE}|" /usr/local/etc/php.ini
 # iocage exec ${JAIL_NAME} openssl dhparam -out /usr/local/etc/pki/tls/private/dhparams_4096.pem 4096
 iocage restart ${JAIL_NAME}
 
 # Secure database, set root password, create Nextcloud DB, user, and password
-iocage exec ${JAIL_NAME} mysql -u root -e "CREATE DATABASE nextcloud;"
-iocage exec ${JAIL_NAME} mysql -u root -e "GRANT ALL ON nextcloud.* TO nextcloud@localhost IDENTIFIED BY '${DB_PASSWORD}';"
-iocage exec ${JAIL_NAME} mysql -u root -e "DELETE FROM mysql.user WHERE User='';"
-iocage exec ${JAIL_NAME} mysql -u root -e "DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');"
-iocage exec ${JAIL_NAME} mysql -u root -e "DROP DATABASE IF EXISTS test;"
-iocage exec ${JAIL_NAME} mysql -u root -e "DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';"
-iocage exec ${JAIL_NAME} mysql -u root -e "UPDATE mysql.user SET Password=PASSWORD('${DB_ROOT_PASSWORD}') WHERE User='root';"
-iocage exec ${JAIL_NAME} mysqladmin reload
-iocage exec ${JAIL_NAME} cp -f /mnt/configs/my.cnf /root/.my.cnf
-iocage exec ${JAIL_NAME} sed -i '' "s|mypassword|${DB_ROOT_PASSWORD}|" /root/.my.cnf
+if [ "${DATABASE}" = "mariadb" ]; then
+  iocage exec ${JAIL_NAME} mysql -u root -e "CREATE DATABASE nextcloud;"
+  iocage exec ${JAIL_NAME} mysql -u root -e "GRANT ALL ON nextcloud.* TO nextcloud@localhost IDENTIFIED BY '${DB_PASSWORD}';"
+  iocage exec ${JAIL_NAME} mysql -u root -e "DELETE FROM mysql.user WHERE User='';"
+  iocage exec ${JAIL_NAME} mysql -u root -e "DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');"
+  iocage exec ${JAIL_NAME} mysql -u root -e "DROP DATABASE IF EXISTS test;"
+  iocage exec ${JAIL_NAME} mysql -u root -e "DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';"
+  iocage exec ${JAIL_NAME} mysql -u root -e "UPDATE mysql.user SET Password=PASSWORD('${DB_ROOT_PASSWORD}') WHERE User='root';"
+  iocage exec ${JAIL_NAME} mysqladmin reload
+  iocage exec ${JAIL_NAME} cp -f /mnt/configs/my.cnf /root/.my.cnf
+  iocage exec ${JAIL_NAME} sed -i '' "s|mypassword|${DB_ROOT_PASSWORD}|" /root/.my.cnf
+elif [ "${DATABASE}" = "pgsql" ]; then
+  iocage exec ${JAIL_NAME} cp -f /mnt/configs/pgpass /root/.pgpass
+  iocage exec ${JAIL_NAME} chmod 600 /root/.pgpass
+  iocage exec ${JAIL_NAME} chown postgres /var/db/postgres/
+  iocage exec ${JAIL_NAME} /usr/local/etc/rc.d/postgresql initdb
+  iocage exec ${JAIL_NAME} su -m postgres -c '/usr/local/bin/pg_ctl -D /var/db/postgres/data10 start'
+  iocage exec ${JAIL_NAME} sed -i '' "s|mypassword|${DB_ROOT_PASSWORD}|" /root/.pgpass
+  iocage exec ${JAIL_NAME} psql -U postgres -c "CREATE DATABASE nextcloud;"
+  iocage exec ${JAIL_NAME} psql -U postgres -c "CREATE USER nextcloud WITH ENCRYPTED PASSWORD '${DB_PASSWORD}';"
+  iocage exec ${JAIL_NAME} psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE nextcloud TO nextcloud;"
+  iocage exec ${JAIL_NAME} psql -U postgres -c "SELECT pg_reload_conf();"
+fi
 
 # Save passwords for later reference
-iocage exec ${JAIL_NAME} echo "MySQL root password is ${DB_ROOT_PASSWORD}" > /root/${JAIL_NAME}_db_password.txt
+iocage exec ${JAIL_NAME} echo "${DB_NAME} root password is ${DB_ROOT_PASSWORD}" > /root/${JAIL_NAME}_db_password.txt
 iocage exec ${JAIL_NAME} echo "Nextcloud database password is ${DB_PASSWORD}" >> /root/${JAIL_NAME}_db_password.txt
 iocage exec ${JAIL_NAME} echo "Nextcloud Administrator password is ${ADMIN_PASSWORD}" >> /root/${JAIL_NAME}_db_password.txt
 
@@ -231,7 +273,11 @@ fi
 # CLI installation and configuration of Nextcloud
 iocage exec ${JAIL_NAME} touch /var/log/nextcloud.log
 iocage exec ${JAIL_NAME} chown www /var/log/nextcloud.log
-iocage exec ${JAIL_NAME} su -m www -c "php /usr/local/www/apache24/data/nextcloud/occ maintenance:install --database=\"mysql\" --database-name=\"nextcloud\" --database-user=\"nextcloud\" --database-pass=\"${DB_PASSWORD}\" --database-host=\"localhost:/tmp/mysql.sock\" --admin-user=\"admin\" --admin-pass=\"${ADMIN_PASSWORD}\" --data-dir=\"/mnt/files\""
+if [ "${DATABASE}" = "mariadb" ]; then
+  iocage exec ${JAIL_NAME} su -m www -c "php /usr/local/www/apache24/data/nextcloud/occ maintenance:install --database=\"mysql\" --database-name=\"nextcloud\" --database-user=\"nextcloud\" --database-pass=\"${DB_PASSWORD}\" --database-host=\"localhost:/tmp/mysql.sock\" --admin-user=\"admin\" --admin-pass=\"${ADMIN_PASSWORD}\" --data-dir=\"/mnt/files\""
+elif [ "${DATABASE}" = "pgsql" ]; then
+  iocage exec ${JAIL_NAME} su -m www -c "php /usr/local/www/apache24/data/nextcloud/occ maintenance:install --database=\"pgsql\" --database-name=\"nextcloud\" --database-user=\"nextcloud\" --database-pass=\"${DB_PASSWORD}\" --database-host=\"localhost:/tmp/.s.PGSQL.5432\" --admin-user=\"admin\" --admin-pass=\"${ADMIN_PASSWORD}\" --data-dir=\"/mnt/files\""
+fi
 iocage exec ${JAIL_NAME} su -m www -c "php /usr/local/www/apache24/data/nextcloud/occ config:system:set logtimezone --value=\"${TIME_ZONE}\""
 iocage exec ${JAIL_NAME} su -m www -c 'php /usr/local/www/apache24/data/nextcloud/occ config:system:set log_type --value="file"'
 iocage exec ${JAIL_NAME} su -m www -c 'php /usr/local/www/apache24/data/nextcloud/occ config:system:set logfile --value="/var/log/nextcloud.log"'
@@ -272,7 +318,7 @@ echo "Database Information"
 echo "--------------------"
 echo "Database user = nextcloud"
 echo "Database password = ${DB_PASSWORD}"
-echo "The MariaDB root password is ${DB_ROOT_PASSWORD}"
+echo "The ${DB_NAME} root password is ${DB_ROOT_PASSWORD}"
 echo ""
 echo "All passwords are saved in /root/${JAIL_NAME}_db_password.txt"
 echo ""

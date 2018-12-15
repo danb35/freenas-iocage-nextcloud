@@ -1,5 +1,5 @@
 #!/bin/sh
-# Build an iocage jail under FreeNAS 11.1 using the current release of Nextcloud 14
+# Build an iocage jail under FreeNAS 11.1 or 11.2 using the current release of Nextcloud 15
 # https://github.com/danb35/freenas-iocage-nextcloud
 
 # Check for root privileges
@@ -156,8 +156,8 @@ iocage exec ${JAIL_NAME} chown -R www:www /mnt/files
 iocage exec ${JAIL_NAME} chmod -R 770 /mnt/files
 iocage exec ${JAIL_NAME} "if [ -z /usr/ports ]; then portsnap fetch extract; else portsnap auto; fi"
 iocage exec ${JAIL_NAME} chsh -s /usr/local/bin/bash root
-iocage exec ${JAIL_NAME} fetch -o /tmp https://download.nextcloud.com/server/releases/latest-14.tar.bz2
-iocage exec ${JAIL_NAME} tar xjf /tmp/latest-14.tar.bz2 -C /usr/local/www/apache24/data/
+iocage exec ${JAIL_NAME} fetch -o /tmp https://download.nextcloud.com/server/releases/latest-15.tar.bz2
+iocage exec ${JAIL_NAME} tar xjf /tmp/latest-15.tar.bz2 -C /usr/local/www/apache24/data/
 iocage exec ${JAIL_NAME} chown -R www:www /usr/local/www/apache24/data/nextcloud/
 iocage exec ${JAIL_NAME} sysrc apache24_enable="YES"
 iocage exec ${JAIL_NAME} sysrc mysql_enable="YES"

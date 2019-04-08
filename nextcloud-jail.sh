@@ -145,7 +145,7 @@ if [ "${RELEASE}" = "11.1-RELEASE" ]; then
   iocage exec ${JAIL_NAME} pkg upgrade -yf
 fi
 if [ "${DATABASE}" = "mariadb" ]; then
-  iocage exec ${JAIL_NAME} pkg install -qy mariadb101-server php72-pdo_mysql php72-mysqli
+  iocage exec ${JAIL_NAME} pkg install -qy mariadb103-server php72-pdo_mysql php72-mysqli
 elif [ "${DATABASE}" = "pgsql" ]; then
   iocage exec ${JAIL_NAME} pkg install -qy postgresql10-server
 fi
@@ -225,11 +225,7 @@ else
 fi
 iocage exec ${JAIL_NAME} cp -f /mnt/configs/www.conf /usr/local/etc/php-fpm.d/
 if [ "${DATABASE}" = "mariadb" ]; then
-  iocage exec ${JAIL_NAME} cp -f /usr/local/share/mysql/my-small.cnf /var/db/mysql/my.cnf
-  iocage exec ${JAIL_NAME} sed -i '' "s/#skip-networking/skip-networking/" /var/db/mysql/my.cnf
-  iocage exec ${JAIL_NAME} sed -i '' "/\[mysqld\]/i \
-transaction_isolation = READ-COMMITTED\
-binlog_format = ROW" /var/db/mysql/my.cnf
+  iocage exec ${JAIL_NAME} cp -f /mnt/configs/my-system.cnf /var/db/mysql/my.cnf
 fi
 iocage exec ${JAIL_NAME} sed -i '' "s/yourhostnamehere/${HOST_NAME}/" /usr/local/etc/apache24/Includes/${HOST_NAME}.conf
 iocage exec ${JAIL_NAME} sed -i '' "s/jailiphere/${JAIL_IP}/" /usr/local/etc/apache24/Includes/${HOST_NAME}.conf
@@ -278,9 +274,11 @@ iocage exec ${JAIL_NAME} touch /var/log/nextcloud.log
 iocage exec ${JAIL_NAME} chown www /var/log/nextcloud.log
 if [ "${DATABASE}" = "mariadb" ]; then
   iocage exec ${JAIL_NAME} su -m www -c "php /usr/local/www/apache24/data/nextcloud/occ maintenance:install --database=\"mysql\" --database-name=\"nextcloud\" --database-user=\"nextcloud\" --database-pass=\"${DB_PASSWORD}\" --database-host=\"localhost:/tmp/mysql.sock\" --admin-user=\"admin\" --admin-pass=\"${ADMIN_PASSWORD}\" --data-dir=\"/mnt/files\""
+  iocage exec ${JAIL_NAME} su -m www -c "php /usr/local/www/apache24/data/nextcloud/occ config:system:set mysql.utf8mb4 --type boolean --value=\"true\""
 elif [ "${DATABASE}" = "pgsql" ]; then
   iocage exec ${JAIL_NAME} su -m www -c "php /usr/local/www/apache24/data/nextcloud/occ maintenance:install --database=\"pgsql\" --database-name=\"nextcloud\" --database-user=\"nextcloud\" --database-pass=\"${DB_PASSWORD}\" --database-host=\"localhost:/tmp/.s.PGSQL.5432\" --admin-user=\"admin\" --admin-pass=\"${ADMIN_PASSWORD}\" --data-dir=\"/mnt/files\""
 fi
+# iocage exec ${JAIL_NAME} su -m www -c "php /usr/local/www/apache24/data/nextcloud/occ db:convert-filecache-bigint"
 iocage exec ${JAIL_NAME} su -m www -c "php /usr/local/www/apache24/data/nextcloud/occ config:system:set logtimezone --value=\"${TIME_ZONE}\""
 iocage exec ${JAIL_NAME} su -m www -c 'php /usr/local/www/apache24/data/nextcloud/occ config:system:set log_type --value="file"'
 iocage exec ${JAIL_NAME} su -m www -c 'php /usr/local/www/apache24/data/nextcloud/occ config:system:set logfile --value="/var/log/nextcloud.log"'

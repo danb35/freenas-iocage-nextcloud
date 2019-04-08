@@ -1,17 +1,12 @@
 # freenas-iocage-nextcloud
 Script to create an iocage jail on FreeNAS for the latest Nextcloud 14 release, including Apache 2.4.x, MariaDB 10.1/PostgreSQL 10, and Let's Encrypt
 
-This script will create an iocage jail on FreeNAS 11.1 or 11.2 with the latest release of Nextcloud 14, along with its dependencies.  It will obtain a trusted certificate from Let's Encrypt for the system, install it, and configure it to renew automatically.  It will create the Nextcloud database and generate a strong root password and user password for the database system.  It will configure the jail to store the database and Nextcloud user data outside the jail, so it will not be lost in the event you need to rebuild the jail.
+This script will create an iocage jail on FreeNAS 11.1 or 11.2 with the latest release of Nextcloud 15, along with its dependencies.  It will obtain a trusted certificate from Let's Encrypt for the system, install it, and configure it to renew automatically.  It will create the Nextcloud database and generate a strong root password and user password for the database system.  It will configure the jail to store the database and Nextcloud user data outside the jail, so it will not be lost in the event you need to rebuild the jail.
 
 ## Status
-This script has been tested on FreeNAS 11.1-U2 and appears to be working without issue.  It is known to NOT work on 11.1-U3 or 11.1-U4 out of the box. 11.1-U3 has a version of iocage with a bug in the jail creation script. This can be fixed by using the following commands.
+This script appears to work well on all FreeNAS 11.2 releases.  FreeNAS 11.2-U2.1 (and perhaps -U2) have a bug that results in jail mountpoints being lost on system restart.  The most common indication of this is that the Nextcloud page doesn't appear when you browse to your installation.  If you experience this, first run `iocage fstab -l nextcloud`.  If you don't see four entries, you've been bitten.  To recover, enter the jail's shell.  Run `service mysql-server stop` followed by `rm -rf /var/db/mysql/*`.  Then exit the shell and stop the jail.
 
-```
-cd /tmp
-git clone --recursive https://github.com/iocage/iocage
-cp -R iocage/iocage/lib/ /usr/local/lib/python3.6/site-packages/iocage/lib
-```
-This script also appears to work without issue on FreeNAS 11.2-BETA1, BETA2, and BETA3.
+Next, re-add the mountpoints, either through the FreeNAS GUI or at the shell, whichever you prefer.  $DB_PATH (which by default is $POOL_PATH/db) needs to be mounted at /var/db/mysql/.  $FILES_PATH (which by default is $POOL_PATH/files) needs to be mounted at /media/files.  Then restart the jail and you should be good to go.
 
 ## Usage
 
@@ -60,6 +55,7 @@ It's also helpful if HOST_NAME resolves to your jail from **inside** your networ
 Once you've downloaded the script, prepared the configuration file, and (if applicable) made the necessary edits to `configs/acme_dns_issue.sh`, run this script (`./nextcloud-jail.sh`).  The script will run for several minutes.  When it finishes, your jail will be created, Nextcloud will be installed and configured, and you'll be shown the randomly-generated password for the default user ("admin").  You can then log in and create users, add data, and generally do whatever else you like.
 
 ### To Do
-This script has been tested on a few different systems, obtaining the cert in both DNS and Standalone mode, and everything seems to be working properly.  Further testing is, of course, always appreciated.
+I'd appreciate any suggestions (or, better yet, pull requests) to improve the various config files I'm using.  Most of them are adapted from the default configuration files that ship with the software in question, and have only been lightly edited to work in this application.  But if there are changes to settings or organization that could improve performance or reliability, I'd like to hear about them.
 
-I'd also appreciate any suggestions (or pull requests) to improve the various config files I'm using.  Most of them are adapted from the default configuration files that ship with the software in question, and have only been lightly edited to work in this application.  But if there are changes to settings or organization that could improve performance or reliability, I'd like to hear about them.
+### HTTP Strict Transport Security (HSTS)
+Nextcloud will warn you that HSTS is not enabled.  This is intentional--if there's a problem with your TLS configuration, your cert expires, etc., HSTS can prevent you from accessing your site.  Once you're sure everything is working properly with TLS and your certificate (including renewal if you're using a Let's Encrypt cert), you should enable it by uncommenting line 43 in `/usr/local/etc/apache24/Includes/$HOST_NAME.conf`.

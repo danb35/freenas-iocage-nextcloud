@@ -117,11 +117,11 @@ if [ "$(ls -A $DB_PATH)" ]; then
   exit 1
 fi
 
-
+# Create the jail, pre-installing needed packages
 cat <<__EOF__ >/tmp/pkg.json
 {
   "pkgs":[
-  "nano","curl","sudo","redis","php72-ctype",
+  "nano","curl","sudo","redis","php72-ctype","gnupg",
   "php72-dom","php72-gd","php72-iconv","php72-json","php72-mbstring",
   "php72-posix","php72-simplexml","php72-xmlreader","php72-xmlwriter",
   "php72-zip","php72-zlib","php72-hash","php72-xml",
@@ -135,6 +135,10 @@ cat <<__EOF__ >/tmp/pkg.json
 __EOF__
 
 iocage create --name "${JAIL_NAME}" -p /tmp/pkg.json -r ${RELEASE} ip4_addr="${INTERFACE}|${JAIL_IP}/24" defaultrouter="${DEFAULT_GW_IP}" boot="on" host_hostname="${JAIL_NAME}" vnet="${VNET}"
+then
+	echo "Failed to create jail"
+	exit 1
+fi
 rm /tmp/pkg.json
 
 # fix 'libdl.so.1 missing' error in 11.1 versions, by reinstalling packages from older FreeBSD release
@@ -175,8 +179,22 @@ iocage exec ${JAIL_NAME} chown -R www:www /mnt/files
 iocage exec ${JAIL_NAME} chmod -R 770 /mnt/files
 iocage exec ${JAIL_NAME} "if [ -z /usr/ports ]; then portsnap fetch extract; else portsnap auto; fi"
 iocage exec ${JAIL_NAME} chsh -s /usr/local/bin/bash root
-iocage exec ${JAIL_NAME} fetch -o /tmp https://download.nextcloud.com/server/releases/nextcloud-16.0.0.tar.bz2
-iocage exec ${JAIL_NAME} tar xjf /tmp/nextcloud-16.0.0.tar.bz2 -C /usr/local/www/apache24/data/
+FILE="nextcloud-16.0.0.tar.bz2"
+iocage exec ${JAIL_NAME} fetch -o /tmp https://download.nextcloud.com/server/releases/$FILE https://download.nextcloud.com/server/releases/$FILE.asc https://nextcloud.com/nextcloud.asc
+if [ $? -ne 0 ]
+then
+	echo "Failed to download Nextcloud"
+	exit 1
+fi
+iocage exec ${JAIL_NAME} gpg --import /tmp/nextcloud.asc
+iocage exec ${JAIL_NAME} gpg --verify /tmp/$FILE.asc
+if [ $? -ne 0 ]
+then
+	echo "GPG Signature Verification Failed!"
+	echo "The Nextcloud download is corrupt."
+	exit 1
+fi
+iocage exec ${JAIL_NAME} tar xjf /tmp/$FILE -C /usr/local/www/apache24/data/
 iocage exec ${JAIL_NAME} chown -R www:www /usr/local/www/apache24/data/nextcloud/
 iocage exec ${JAIL_NAME} sysrc apache24_enable="YES"
 if [ "${DATABASE}" = "mariadb" ]; then

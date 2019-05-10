@@ -1,5 +1,5 @@
 # freenas-iocage-nextcloud
-Script to create an iocage jail on FreeNAS for the latest Nextcloud 16 release, including Apache 2.4.x, MariaDB 10.3/PostgreSQL 10, and Let's Encrypt
+Script to create an iocage jail on FreeNAS for the latest Nextcloud 16 release, including Caddy 1.0, MariaDB 10.3/PostgreSQL 10, and Let's Encrypt
 
 This script will create an iocage jail on FreeNAS 11.1 or 11.2 with the latest release of Nextcloud 16, along with its dependencies.  It will obtain a trusted certificate from Let's Encrypt for the system, install it, and configure it to renew automatically.  It will create the Nextcloud database and generate a strong root password and user password for the database system.  It will configure the jail to store the database and Nextcloud user data outside the jail, so it will not be lost in the event you need to rebuild the jail.
 
@@ -11,48 +11,59 @@ Next, re-add the mountpoints, either through the FreeNAS GUI or at the shell, wh
 ## Usage
 
 ### Prerequisites
-Although not required, it's recommended to create two datasets on your main storage pool: one named `files`, which will store the Nextcloud user data; and one called `db`, which will store the SQL database.  For optimal performance, set the record size of the `db` dataset to 16 KB (under Advanced Settings).
+Although not required, it's recommended to create two datasets on your main storage pool: one named `files`, which will store the Nextcloud user data; and one called `db`, which will store the SQL database.  For optimal performance, set the record size of the `db` dataset to 16 KB (under Advanced Settings).  It's also recommended to cache only metadata on the `db` dataset; you can do this by running `zfs set primarycache=metadata poolname/db`.
 
 ### Installation
 Download the repository to a convenient directory on your FreeNAS system by running `git clone https://github.com/danb35/freenas-iocage-nextcloud`.  Then change into the new directory and create a file called `nextcloud-config`.  It should look like this:
 ```
 JAIL_IP="192.168.1.199"
 DEFAULT_GW_IP="192.168.1.1"
-INTERFACE="igb0"
-VNET="off"
 POOL_PATH="/mnt/tank"
-JAIL_NAME="nextcloud"
 TIME_ZONE="America/New_York" # See http://php.net/manual/en/timezones.php
 HOST_NAME="YOUR_FQDN"
-DATABASE="mariadb"
 STANDALONE_CERT=0
 DNS_CERT=0
-SELFSIGNED_CERT=0
-NO_CERT=0
-TEST_CERT="--test"
+CERT_EMAIL="me@example.com"
 ```
-Many of the options are self-explanatory, and all should be adjusted to suit your needs.  JAIL_IP and DEFAULT_GW_IP are the IP address and default gateway, respectively, for your jail.  INTERFACE is the network interface that your FreeNAS server is actually using.  If you have multiple interfaces, run `ifconfig` and see which one has an IP address, and enter that one here. If you want to use a virtual non-shared IP, pick a unused name as your interface and set VNET to ''on''  POOL_PATH is the path for your data pool, on which the Nextcloud user data and SQL database will be stored.  JAIL_NAME is the name of the jail, and wouldn't ordinarily need to be changed.  If you don't specify it in nextcloud-config, JAIL_NAME will default to "nextcloud".  TIME_ZONE is the time zone of your location, as PHP sees it--see the [PHP manual](http://php.net/manual/en/timezones.php) for a list of all valid time zones.
+Many of the options are self-explanatory, and all should be adjusted to suit your needs, but only a few are mandatory.  The mandatory options are:
 
-HOST_NAME is the fully-qualified domain name you want to assign to your installation.  You must own (or at least control) this domain, because Let's Encrypt will test that control.  STANDALONE_CERT and DNS_CERT control which validation method Let's Encrypt will use to do this.  If HOST_NAME is accessible to the outside world--that is, you have ports 80 and 443 (at least) forwarded to your jail, so that if an outside user browses to http://HOST_NAME/, he'll reach your jail--set STANDALONE_CERT to 1, and DNS_CERT to 0.  If HOST_NAME is not accessible to the outside world, but your DNS provider has an API that allows you to make automated changes, set DNS_CERT to 1, and STANDALONE_CERT to 0.  In that case, you'll also need to copy `configs/acme_dns_issue.sh_orig` to `configs/acme_dns_issue.sh`, edit its contents appropriately, and make it executable (`chmod +x configs/acme_dns_issue.sh`).
+* JAIL_IP is the IP address for your jail
+* DEFAULT_GW_IP is the address for your default gateway
+* POOL_PATH is the path for your data pool.
+* TIME_ZONE is the time zone of your location, in PHP notation--see the [PHP manual](http://php.net/manual/en/timezones.php) for a list of all valid time zones.
+* HOST_NAME is the fully-qualified domain name you want to assign to your installation.  You must own (or at least control) this domain, because Let's Encrypt will test that control.
+* DNS_CERT and STANDALONE_CERT determine which method will be used to validate domain control for Let's Encrypt.  One **and only one** of these must be set to 1.
+* DNS_PLUGIN: If DNS_CERT is set, DNS_PLUGIN must contain the name of the DNS validation plugin you'll use with Caddy to validate domain control.  See the [Caddy documentation](https://caddyserver.com/docs) under the heading of "DNS Providers" for the available plugins, but omit the leading "tls.dns.".  For example, to use Cloudflare, set `DNS_PLUGIN="cloudflare"`.
+* DNS_ENV: If DNS_CERT is set, DNS_ENV must contain the authentication credentials for your DNS provider.  See the [Caddy documentation](https://caddyserver.com/docs) under the heading of "DNS Providers" for further details.  For Cloudflare, you'd set `DNS_ENV="CLOUDFLARE_EMAIL=foo@bar.baz CLOUDFLARE_API_KEY=blah"`.
+* CERT_EMAIL is the email address Let's Encrypt will use to notify you of certificate expiration
+ 
+In addition, there are some other options which have sensible defaults, but can be adjusted if needed.  These are:
 
-DATABASE is the type of database you want to use. By default MariaDB is used since it is recommended for use with Nextcloud, but PostgreSQL is also supported and might be faster in some cases. It even has native 4-byte support meaning that it supports characters like Emoji's by default while this is still an experimental feature with MariDB. The only possible downside is that maybe some apps don't support anything other than MySQL/MariaDB, but everything in the Nextcloud app store does! This makes it a non-issue for most users, but if you use apps that cant be installed from the Nextcloud app store, look up if they support PostgreSQL.
-Change the option to `pgsql` if you want to use PostgreSQL.
-Converting the database later on is possible, but it's not easy and not recommended.
+* JAIL_NAME: The name of the jail, defaults to "nextcloud"
+* DB_PATH, FILES_PATH, and PORTS_PATH: These are the paths to your database files, your data files, and the FreeBSD Ports collection.  They default to $POOL_PATH/db, $POOL_PATH/files, and $POOL_PATH/portsnap, respectively.
+* DATABASE: Which database management system to use.  Default is "mariadb", but can be set to "pgsql" if you prefer to use PostgreSQL.
 
-If you are unable or unwilling to use a Let's Encrypt certificate, you can instead create a self-signed certificate by setting SELFSIGNED_CERT to 1.  If you want to provide your own certificate (from another certificate authority, or from Cloudflare, for example), you should also set SELFSIGNED_CERT to 1, and then replace the self-signed certificate with your own certificate once the jail is created.
-
-Finally, if you don't want to implement SSL in the jail at all, you can set NO_CERT to 1.  If your jail is behind a proxy that handles SSL, this might make sense.
-
-**IMPORTANT:**  One of the four CERT variables must be set to 1.  Otherwise, the script will refuse to run.
-
-DB_PATH, FILES_PATH, and PORTS_PATH can optionally be set to individual paths for your SQL database, your Nextcloud files, and your FreeBSD ports collection.  If not set, they'll default to $POOL_PATH/db, $POOL_PATH/files, and $POOL_PATH/portsnap, respectively.  These do not need to be set in nextcloud-config, and **should not be set** unless you want the SQL database, your Nextcloud files, and/or your ports collection to be in a non-standard location.
-
-Finally, TEST_CERT is a flag to issue test certificates from Let's Encrypt.  They'll run through the same issuance process in the same, but will come from an un-trusted certificate authority (so you'll get a warning when you first visit your site).  For test purposes, I recommend you set this to "--test" as above, otherwise the [Let's Encrypt rate limits](https://letsencrypt.org/docs/rate-limits/) may prevent issuing the cert when you most want it.  Once you've confirmed that everything is working properly, you can set TEST_CERT to "".  Unless you set TEST_CERT to "" in nextcloud-config, it will default to "--test".
+If you're going to open ports 80 and 443 from the outside world to your jail, do so before running the script, and set STANDALONE_CERT to 1.  If not, but you use a DNS provider that's supported by Caddy, set DNS_CERT to 1.  If neither of these is true, you won't be able to use this script without modification.
 
 It's also helpful if HOST_NAME resolves to your jail from **inside** your network.  You'll probably need to configure this on your router.  If it doesn't, you'll still be able to reach your Nextcloud installation via the jail's IP address, but you'll get certificate errors that way.
 
 ### Execution
-Once you've downloaded the script, prepared the configuration file, and (if applicable) made the necessary edits to `configs/acme_dns_issue.sh`, run this script (`./nextcloud-jail.sh`).  The script will run for several minutes.  When it finishes, your jail will be created, Nextcloud will be installed and configured, and you'll be shown the randomly-generated password for the default user ("admin").  You can then log in and create users, add data, and generally do whatever else you like.
+Once you've downloaded the script and prepared the configuration file, run this script (`./nextcloud-jail.sh`).  The script will run for several minutes.  When it finishes, your jail will be created, Nextcloud will be installed and configured, and you'll be shown the randomly-generated password for the default user ("admin").  You can then log in and create users, add data, and generally do whatever else you like.
+
+This configuration generated by this script will obtain certs from a non-trusted certificate authority by default.  This is to prevent you from exhausting the [Let's Encrypt rate limits](https://letsencrypt.org/docs/rate-limits/) while you're testing things out.  Once you're sure things are working, you'll want to get a trusted cert instead.  To do this, enter the jail by running `iocage console nextcloud`.  Then edit the Caddyfile by running `nano /usr/local/www/Caddyfile`.  Near the top, you'll see a block that says (if you used DNS validation):
+```
+	tls {
+		ca https://acme-staging-v02.api.letsencrypt.org/directory
+		DNS-PLACEHOLDER
+	}
+```
+Or, if you didn't use DNS validation:
+```
+	tls {
+		ca https://acme-staging-v02.api.letsencrypt.org/directory
+	}
+```
+If you used DNS validation, remove the line that says `ca https://acme-staging-v02.api.letsencrypt.org/directory`.  If you didn't use DNS validation, remove the entire block.  Then restart Caddy using `service caddy restart`.
 
 ### To Do
 I'd appreciate any suggestions (or, better yet, pull requests) to improve the various config files I'm using.  Most of them are adapted from the default configuration files that ship with the software in question, and have only been lightly edited to work in this application.  But if there are changes to settings or organization that could improve performance or reliability, I'd like to hear about them.

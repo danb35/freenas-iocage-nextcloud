@@ -42,6 +42,8 @@ In addition, there are some other options which have sensible defaults, but can 
 * JAIL_NAME: The name of the jail, defaults to "nextcloud"
 * DB_PATH, FILES_PATH, and PORTS_PATH: These are the paths to your database files, your data files, and the FreeBSD Ports collection.  They default to $POOL_PATH/db, $POOL_PATH/files, and $POOL_PATH/portsnap, respectively.
 * DATABASE: Which database management system to use.  Default is "mariadb", but can be set to "pgsql" if you prefer to use PostgreSQL.
+* INTERFACE: The network interface to use for the jail.  Defaults to `vnet0`.
+* VNET: Whether to use the iocage virtual network stack.  Defaults to `on`.
 
 If you're going to open ports 80 and 443 from the outside world to your jail, do so before running the script, and set STANDALONE_CERT to 1.  If not, but you use a DNS provider that's supported by Caddy, set DNS_CERT to 1.  If neither of these is true, you won't be able to use this script without modification.
 

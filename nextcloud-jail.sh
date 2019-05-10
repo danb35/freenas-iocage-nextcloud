@@ -162,6 +162,7 @@ elif [ "${DATABASE}" = "pgsql" ]; then
   iocage exec ${JAIL_NAME} mkdir -p /var/db/postgres
 fi
 iocage exec ${JAIL_NAME} mkdir -p /mnt/configs
+iocage exec ${JAIL_NAME} mkdir -p /var/log/apache
 iocage fstab -a ${JAIL_NAME} ${PORTS_PATH}/ports /usr/ports nullfs rw 0 0
 iocage fstab -a ${JAIL_NAME} ${PORTS_PATH}/db /var/db/portsnap nullfs rw 0 0
 iocage fstab -a ${JAIL_NAME} ${FILES_PATH} /mnt/files nullfs rw 0 0

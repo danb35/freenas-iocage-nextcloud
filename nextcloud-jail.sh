@@ -146,7 +146,7 @@ cat <<__EOF__ >/tmp/pkg.json
 }
 __EOF__
 
-iocage create --name "${JAIL_NAME}" -p /tmp/pkg.json -r ${RELEASE} ip4_addr="${INTERFACE}|${JAIL_IP}/24" defaultrouter="${DEFAULT_GW_IP}" boot="on" host_hostname="${JAIL_NAME}" vnet="${VNET}"
+iocage create --name "${JAIL_NAME}" -p /tmp/pkg.json -r "${RELEASE}" ip4_addr="${INTERFACE}|${JAIL_IP}/24" defaultrouter="${DEFAULT_GW_IP}" boot="on" host_hostname="${JAIL_NAME}" vnet="${VNET}"
 if [ $? -ne 0 ]
 then
 	echo "Failed to create jail"
@@ -188,7 +188,7 @@ if [ "${DATABASE}" = "mariadb" ]; then
 elif [ "${DATABASE}" = "pgsql" ]; then
   iocage fstab -a "${JAIL_NAME}" "${DB_PATH}"  /var/db/postgres  nullfs  rw  0  0
 fi
-iocage fstab -a "${JAIL_NAME}" ${CONFIGS_PATH} /mnt/configs nullfs rw 0 0
+iocage fstab -a "${JAIL_NAME}" "${CONFIGS_PATH}" /mnt/configs nullfs rw 0 0
 iocage exec "${JAIL_NAME}" chown -R www:www /mnt/files
 iocage exec "${JAIL_NAME}" chmod -R 770 /mnt/files
 iocage exec "${JAIL_NAME}" "if [ -z /usr/ports ]; then portsnap fetch extract; else portsnap auto; fi"

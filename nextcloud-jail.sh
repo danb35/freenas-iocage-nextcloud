@@ -146,8 +146,7 @@ cat <<__EOF__ >/tmp/pkg.json
 }
 __EOF__
 
-iocage create --name "${JAIL_NAME}" -p /tmp/pkg.json -r "${RELEASE}" ip4_addr="${INTERFACE}|${JAIL_IP}/24" defaultrouter="${DEFAULT_GW_IP}" boot="on" host_hostname="${JAIL_NAME}" vnet="${VNET}"
-if [ $? -ne 0 ]
+if ! iocage create --name "${JAIL_NAME}" -p /tmp/pkg.json -r "${RELEASE}" ip4_addr="${INTERFACE}|${JAIL_IP}/24" defaultrouter="${DEFAULT_GW_IP}" boot="on" host_hostname="${JAIL_NAME}" vnet="${VNET}"
 then
 	echo "Failed to create jail"
 	exit 1
@@ -193,23 +192,20 @@ iocage exec "${JAIL_NAME}" chown -R www:www /mnt/files
 iocage exec "${JAIL_NAME}" chmod -R 770 /mnt/files
 iocage exec "${JAIL_NAME}" "if [ -z /usr/ports ]; then portsnap fetch extract; else portsnap auto; fi"
 fetch -o /tmp https://getcaddy.com
-iocage exec "${JAIL_NAME}" bash "${DL_FLAGS}" < /tmp/getcaddy.com
-if [ $? -ne 0 ]
+if ! iocage exec "${JAIL_NAME}" bash "${DL_FLAGS}" < /tmp/getcaddy.com
 then
 	echo "Failed to download/install Caddy"
 	exit 1
 fi
 
 FILE="latest-16.tar.bz2"
-iocage exec "${JAIL_NAME}" fetch -o /tmp https://download.nextcloud.com/server/releases/"${FILE}" https://download.nextcloud.com/server/releases/"${FILE}".asc https://nextcloud.com/nextcloud.asc
-if [ $? -ne 0 ]
+if ! iocage exec "${JAIL_NAME}" fetch -o /tmp https://download.nextcloud.com/server/releases/"${FILE}" https://download.nextcloud.com/server/releases/"${FILE}".asc https://nextcloud.com/nextcloud.asc
 then
 	echo "Failed to download Nextcloud"
 	exit 1
 fi
 iocage exec "${JAIL_NAME}" gpg --import /tmp/nextcloud.asc
-iocage exec "${JAIL_NAME}" gpg --verify /tmp/"${FILE}".asc
-if [ $? -ne 0 ]
+if ! iocage exec "${JAIL_NAME}" gpg --verify /tmp/"${FILE}".asc
 then
 	echo "GPG Signature Verification Failed!"
 	echo "The Nextcloud download is corrupt."

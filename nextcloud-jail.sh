@@ -192,7 +192,7 @@ iocage exec "${JAIL_NAME}" chown -R www:www /mnt/files
 iocage exec "${JAIL_NAME}" chmod -R 770 /mnt/files
 iocage exec "${JAIL_NAME}" "if [ -z /usr/ports ]; then portsnap fetch extract; else portsnap auto; fi"
 fetch -o /tmp https://getcaddy.com
-if ! iocage exec "${JAIL_NAME}" bash "${DL_FLAGS}" < /tmp/getcaddy.com
+if ! iocage exec "${JAIL_NAME}" bash ${DL_FLAGS} < /tmp/getcaddy.com
 then
 	echo "Failed to download/install Caddy"
 	exit 1

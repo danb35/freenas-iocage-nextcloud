@@ -23,6 +23,7 @@ FILES_PATH=""
 PORTS_PATH=""
 STANDALONE_CERT=0
 DNS_CERT=0
+NO_CERT=0
 DL_FLAGS="-s personal"
 DNS_SETTING=""
 
@@ -68,8 +69,8 @@ if [ -z "${HOST_NAME}" ]; then
   echo 'Configuration error: HOST_NAME must be set'
   exit 1
 fi
-if [ $STANDALONE_CERT -eq 0 ] && [ $DNS_CERT -eq 0 ] ; then
-  echo 'Configuration error: Either STANDALONE_CERT or DNS_CERT'
+if [ $STANDALONE_CERT -eq 0 ] && [ $DNS_CERT -eq 0 ] && [ $NO_CERT -eq 0 ]; then
+  echo 'Configuration error: Either STANDALONE_CERT, DNS_CERT, or NO_CERT'
   echo 'must be set to 1.'
   exit 1
 fi
@@ -231,7 +232,11 @@ fi
 iocage exec "${JAIL_NAME}" cp -f /mnt/configs/php.ini /usr/local/etc/php.ini
 iocage exec "${JAIL_NAME}" cp -f /mnt/configs/redis.conf /usr/local/etc/redis.conf
 iocage exec "${JAIL_NAME}" cp -f /mnt/configs/www.conf /usr/local/etc/php-fpm.d/
-iocage exec "${JAIL_NAME}" cp -f /mnt/configs/Caddyfile /usr/local/www/
+if [ $NO_CERT -eq 1 ]; then
+  iocage exec "${JAIL_NAME}" cp -f /mnt/configs/Caddyfile-nossl /usr/local/www/Caddyfile
+else
+  iocage exec "${JAIL_NAME}" cp -f /mnt/configs/Caddyfile /usr/local/www/
+fi
 iocage exec "${JAIL_NAME}" cp -f /mnt/configs/caddy /usr/local/etc/rc.d/
 
 if [ "${DATABASE}" = "mariadb" ]; then
@@ -296,7 +301,11 @@ iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ config
 iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ config:system:set redis host --value="/tmp/redis.sock"'
 iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ config:system:set redis port --value=0 --type=integer'
 iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ config:system:set memcache.locking --value="\OC\Memcache\Redis"'
-iocage exec "${JAIL_NAME}" su -m www -c "php /usr/local/www/nextcloud/occ config:system:set overwrite.cli.url --value=\"https://${HOST_NAME}/\""
+if [ $NO_CERT -eq 1 ]; then
+  iocage exec "${JAIL_NAME}" su -m www -c "php /usr/local/www/nextcloud/occ config:system:set overwrite.cli.url --value=\"http://${HOST_NAME}/\""
+else
+  iocage exec "${JAIL_NAME}" su -m www -c "php /usr/local/www/nextcloud/occ config:system:set overwrite.cli.url --value=\"https://${HOST_NAME}/\""
+fi
 iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ config:system:set htaccess.RewriteBase --value="/"'
 iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ maintenance:update:htaccess'
 iocage exec "${JAIL_NAME}" su -m www -c "php /usr/local/www/nextcloud/occ config:system:set trusted_domains 1 --value=\"${HOST_NAME}\""
@@ -312,7 +321,11 @@ iocage fstab -r "${JAIL_NAME}" "${CONFIGS_PATH}" /mnt/configs nullfs rw 0 0
 
 # Done!
 echo "Installation complete!"
-echo "Using your web browser, go to https://${HOST_NAME} to log in"
+if [ $NO_CERT -eq 1 ]; then
+  echo "Using your web browser, go to http://${HOST_NAME} to log in"
+else
+  echo "Using your web browser, go to https://${HOST_NAME} to log in"
+fi
 echo "Default user is admin, password is ${ADMIN_PASSWORD}"
 echo ""
 echo "Database Information"

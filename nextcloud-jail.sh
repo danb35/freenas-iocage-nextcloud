@@ -24,7 +24,7 @@ PORTS_PATH=""
 STANDALONE_CERT=0
 DNS_CERT=0
 NO_CERT=0
-DL_FLAGS="-s personal"
+DL_FLAGS=""
 DNS_SETTING=""
 
 SCRIPT=$(readlink -f "$0")
@@ -93,7 +93,7 @@ if [ $DNS_CERT -eq 1 ] && [ -z "${DNS_ENV}" ] ; then
 fi  
 
 if [ $DNS_CERT -eq 1 ] ; then
-  DL_FLAGS="${DL_FLAGS} tls.dns.${DNS_PLUGIN}"
+  DL_FLAGS="tls.dns.${DNS_PLUGIN}"
   DNS_SETTING="dns ${DNS_PLUGIN}"
 fi
 
@@ -193,7 +193,7 @@ iocage exec "${JAIL_NAME}" chown -R www:www /mnt/files
 iocage exec "${JAIL_NAME}" chmod -R 770 /mnt/files
 iocage exec "${JAIL_NAME}" "if [ -z /usr/ports ]; then portsnap fetch extract; else portsnap auto; fi"
 fetch -o /tmp https://getcaddy.com
-if ! iocage exec "${JAIL_NAME}" bash ${DL_FLAGS} < /tmp/getcaddy.com
+if ! iocage exec "${JAIL_NAME}" bash -s personal "${DL_FLAGS}" < /tmp/getcaddy.com
 then
 	echo "Failed to download/install Caddy"
 	exit 1
@@ -336,15 +336,17 @@ echo "The ${DB_NAME} root password is ${DB_ROOT_PASSWORD}"
 echo ""
 echo "All passwords are saved in /root/${JAIL_NAME}_db_password.txt"
 echo ""
-echo "You have obtained your Let's Encrypt certificate using the staging server."
-echo "This certificate will not be trusted by your browser and will cause SSL errors"
-echo "when you connect.  Once you've verified that everything else is working"
-echo "correctly, you should issue a trusted certificate.  To do this, run:"
-echo "iocage console ${JAIL_NAME}"
-echo "nano /usr/local/www/Caddyfile"
-echo "Remove the line that says:"
-echo "    ca https://acme-staging-v02.api.letsencrypt.org/directory"
-echo "Then save the file and exit nano.  Run"
-echo "    service caddy restart"
-echo "to restart Caddy and obtain a new certificate."
-echo ""
+if [ $NO_CERT -eq 0 ]; then
+  echo "You have obtained your Let's Encrypt certificate using the staging server."
+  echo "This certificate will not be trusted by your browser and will cause SSL errors"
+  echo "when you connect.  Once you've verified that everything else is working"
+  echo "correctly, you should issue a trusted certificate.  To do this, run:"
+  echo "iocage console ${JAIL_NAME}"
+  echo "nano /usr/local/www/Caddyfile"
+  echo "Remove the line that says:"
+  echo "    ca https://acme-staging-v02.api.letsencrypt.org/directory"
+  echo "Then save the file and exit nano.  Run"
+  echo "    service caddy restart"
+  echo "to restart Caddy and obtain a new certificate."
+  echo ""
+fi

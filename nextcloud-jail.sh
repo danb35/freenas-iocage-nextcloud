@@ -69,9 +69,9 @@ if [ -z "${HOST_NAME}" ]; then
   echo 'Configuration error: HOST_NAME must be set'
   exit 1
 fi
-if [ $STANDALONE_CERT -eq 0 ] && [ $DNS_CERT -eq 0 ] && [ $NO_CERT -eq 0 ]; then
-  echo 'Configuration error: Either STANDALONE_CERT, DNS_CERT, or NO_CERT'
-  echo 'must be set to 1.'
+if [ $STANDALONE_CERT -eq 0 ] && [ $DNS_CERT -eq 0 ] && [ $NO_CERT -eq 0 ] && [ $SELFSIGNED_CERT -eq 0 ]; then
+  echo 'Configuration error: Either STANDALONE_CERT, DNS_CERT, NO_CERT,'
+  echo 'or SELFSIGNED_CERT must be set to 1.'
   exit 1
 fi
 if [ $STANDALONE_CERT -eq 1 ] && [ $DNS_CERT -eq 1 ] ; then
@@ -228,13 +228,27 @@ if [ "${DATABASE}" = "pgsql" ]; then
   iocage exec "${JAIL_NAME}" make -C /usr/ports/databases/php72-pdo_pgsql clean install BATCH=yes
 fi
 
+# Generate and install self-signed cert, if necessary
+if [ $SELFSIGNED_CERT -eq 1 ]; then
+  iocage exec "${JAIL_NAME}" mkdir -p /usr/local/etc/pki/tls/private
+  iocage exec "${JAIL_NAME}" mkdir -p /usr/local/etc/pki/tls/certs
+  openssl req -new -newkey rsa:4096 -days 3650 -nodes -x509 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=${HOST_NAME}" -keyout "${CONFIGS_PATH}"/privkey.pem -out "${CONFIGS_PATH}"/fullchain.pem
+  iocage exec "${JAIL_NAME}" cp /mnt/configs/privkey.pem /usr/local/etc/pki/tls/private/privkey.pem
+  iocage exec "${JAIL_NAME}" cp /mnt/configs/fullchain.pem /usr/local/etc/pki/tls/certs/fullchain.pem
+fi
+
 # Copy and edit pre-written config files
 iocage exec "${JAIL_NAME}" cp -f /mnt/configs/php.ini /usr/local/etc/php.ini
 iocage exec "${JAIL_NAME}" cp -f /mnt/configs/redis.conf /usr/local/etc/redis.conf
 iocage exec "${JAIL_NAME}" cp -f /mnt/configs/www.conf /usr/local/etc/php-fpm.d/
 if [ $NO_CERT -eq 1 ]; then
+  echo "Copying Caddyfile for no SSL"
   iocage exec "${JAIL_NAME}" cp -f /mnt/configs/Caddyfile-nossl /usr/local/www/Caddyfile
+elif [ $SELFSIGNED_CERT -eq 1 ]; then
+  echo "Copying Caddyfile for self-signed cert"
+  iocage exec "${JAIL_NAME}" cp -f /mnt/configs/Caddyfile-selfsigned /usr/local/www/Caddyfile
 else
+  echo "Copying Caddyfile for Let's Encrypt cert"
   iocage exec "${JAIL_NAME}" cp -f /mnt/configs/Caddyfile /usr/local/www/
 fi
 iocage exec "${JAIL_NAME}" cp -f /mnt/configs/caddy /usr/local/etc/rc.d/
@@ -291,7 +305,6 @@ if [ "${DATABASE}" = "mariadb" ]; then
 elif [ "${DATABASE}" = "pgsql" ]; then
   iocage exec "${JAIL_NAME}" su -m www -c "php /usr/local/www/nextcloud/occ maintenance:install --database=\"pgsql\" --database-name=\"nextcloud\" --database-user=\"nextcloud\" --database-pass=\"${DB_PASSWORD}\" --database-host=\"localhost:/tmp/.s.PGSQL.5432\" --admin-user=\"admin\" --admin-pass=\"${ADMIN_PASSWORD}\" --data-dir=\"/mnt/files\""
 fi
-# iocage exec "${JAIL_NAME}" su -m www -c "php /usr/local/www/nextcloud/occ db:convert-filecache-bigint"
 iocage exec "${JAIL_NAME}" su -m www -c "php /usr/local/www/nextcloud/occ config:system:set logtimezone --value=\"${TIME_ZONE}\""
 iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ config:system:set log_type --value="file"'
 iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ config:system:set logfile --value="/var/log/nextcloud.log"'
@@ -336,7 +349,7 @@ echo "The ${DB_NAME} root password is ${DB_ROOT_PASSWORD}"
 echo ""
 echo "All passwords are saved in /root/${JAIL_NAME}_db_password.txt"
 echo ""
-if [ $NO_CERT -eq 0 ]; then
+if [ $STANDALONE_CERT -eq 1 ] || [ $DNS_CERT -eq 1 ]; then
   echo "You have obtained your Let's Encrypt certificate using the staging server."
   echo "This certificate will not be trusted by your browser and will cause SSL errors"
   echo "when you connect.  Once you've verified that everything else is working"
@@ -348,5 +361,14 @@ if [ $NO_CERT -eq 0 ]; then
   echo "Then save the file and exit nano.  Run"
   echo "    service caddy restart"
   echo "to restart Caddy and obtain a new certificate."
+  echo ""
+elif [ $SELFSIGNED_CERT -eq 1 ]; then
+  echo "You have chosen to create a self-signed TLS certificate for your Nextcloud"
+  echo "installation.  This certificate will not be trusted by your browser and"
+  echo "will cause SSL errors when you connect.  If you wish to replace this certificate"
+  echo "with one obtained elsewhere, the private key is located at:"
+  echo "/usr/local/etc/pki/tls/private/privkey.pem"
+  echo "The full chain (server + intermediate certificates together) is at:"
+  echo "/usr/local/etc/pki/tls/certs/fullchain.pem"
   echo ""
 fi

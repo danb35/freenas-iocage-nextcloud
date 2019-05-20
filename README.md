@@ -10,14 +10,19 @@ Next, re-add the mountpoints, either through the FreeNAS GUI or at the shell, wh
 
 ## Usage
 
-### Prerequisites
-First, you must own or control a real Internet domain name.  This script obtains a TLS encryption certificate from Let's Encrypt, who will only issue for public domain names.  Thus, domains like `cloud.local`, `mycloud.lan`, or `nextcloud.home` won't work.
+### Prerequisites (Let's Encrypt)
+This script works best when your installation is able to obtain a certificate from [Let's Encrypt](https://letsencrypt.org/).  When you use it this way, Caddy is able to handle all of the TLS-related configuration for you, obtain and renew certificates automatically, etc.  In order for this to happen, you must meet the two requirements below:
 
-Second, one of these two conditions must be met in order for Let's Encrypt to validate your control over the domain name:
+* First, you must own or control a real Internet domain name.  This script obtains a TLS encryption certificate from Let's Encrypt, who will only issue for public domain names.  Thus, domains like `cloud.local`, `mycloud.lan`, or `nextcloud.home` won't work.  Domains can be very inexpensive, and in some cases, they can be free.  [Freenom](https://www.freenom.com/), for example, provides domains for free if you jump through the right hoops.
 
-* You must be able and willing to open ports 80 and 443 from the entire Internet to the jail.  If this applies, do it **before** running this script.
-* DNS hosting for the domain name needs to be with a provider that Caddy supports, to automatically update the DNS records needed to prove your control over the domain.  See the [Caddy documentation](https://caddyserver.com/docs) under the heading of "DNS Providers" for the supported providers, and what information you'll need in order to proceed.
+* Second, one of these two conditions must be met in order for Let's Encrypt to validate your control over the domain name:
 
+  * You must be able and willing to open ports 80 and 443 from the entire Internet to the jail, and leave them open.  If this applies, do it **before** running this script.
+  * DNS hosting for the domain name needs to be with a provider that Caddy supports, to automatically update the DNS records needed to prove your control over the domain.  See the [Caddy documentation](https://caddyserver.com/docs) under the heading of "DNS Providers" for the supported providers, and what information you'll need in order to proceed.
+
+If you aren't able or willing to obtain a certificate from Let's Encrypt, this script also supports configuring Caddy with a self-signed certificate, or with no certificate (and thus no HTTPS) at all.
+
+### Prerequisites (Other)
 Although not required, it's recommended to create two datasets on your main storage pool: one named `files`, which will store the Nextcloud user data; and one called `db`, which will store the SQL database.  For optimal performance, set the record size of the `db` dataset to 16 KB (under Advanced Settings in the FreeNAS web GUI).  It's also recommended to cache only metadata on the `db` dataset; you can do this by running `zfs set primarycache=metadata poolname/db`.
 
 ### Installation
@@ -28,9 +33,7 @@ DEFAULT_GW_IP="192.168.1.1"
 POOL_PATH="/mnt/tank"
 TIME_ZONE="America/New_York"
 HOST_NAME="YOUR_FQDN"
-STANDALONE_CERT=0
-DNS_CERT=0
-NO_CERT=0
+STANDALONE_CERT=1
 CERT_EMAIL="me@example.com"
 ```
 Many of the options are self-explanatory, and all should be adjusted to suit your needs, but only a few are mandatory.  The mandatory options are:
@@ -40,8 +43,8 @@ Many of the options are self-explanatory, and all should be adjusted to suit you
 * POOL_PATH is the path for your data pool.
 * TIME_ZONE is the time zone of your location, in PHP notation--see the [PHP manual](http://php.net/manual/en/timezones.php) for a list of all valid time zones.
 * HOST_NAME is the fully-qualified domain name you want to assign to your installation.  You must own (or at least control) this domain, because Let's Encrypt will test that control.
-* DNS_CERT, STANDALONE_CERT, and NO_CERT determine which method will be used to validate domain control for Let's Encrypt (or, in the case of NO_CERT, indicate that you don't want to use SSL at all).  One **and only one** of these must be set to 1.
-* CERT_EMAIL is the email address Let's Encrypt will use to notify you of certificate expiration.  Mandatory unless you've set NO_CERT=1.
+* DNS_CERT, STANDALONE_CERT, SELFSIGNED_CERT, and NO_CERT determine which method will be used to generate a TLS certificate (or, in the case of NO_CERT, indicate that you don't want to use SSL at all).  DNS_CERT and STANDALONE_CERT indicate use of DNS or HTTP validation for Let's Encrypt, respectively.  One **and only one** of these must be set to 1.
+* CERT_EMAIL is the email address Let's Encrypt will use to notify you of certificate expiration.  Mandatory unless you've set NO_CERT=1 or SELFSIGNED_CERT=1.
 * DNS_PLUGIN: If DNS_CERT is set, DNS_PLUGIN must contain the name of the DNS validation plugin you'll use with Caddy to validate domain control.  See the [Caddy documentation](https://caddyserver.com/docs) under the heading of "DNS Providers" for the available plugins, but omit the leading "tls.dns.".  For example, to use Cloudflare, set `DNS_PLUGIN="cloudflare"`.
 * DNS_ENV: If DNS_CERT is set, DNS_ENV must contain the authentication credentials for your DNS provider.  See the [Caddy documentation](https://caddyserver.com/docs) under the heading of "DNS Providers" for further details.  For Cloudflare, you'd set `DNS_ENV="CLOUDFLARE_EMAIL=foo@bar.baz CLOUDFLARE_API_KEY=blah"`.
  

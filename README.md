@@ -20,6 +20,15 @@ This script works best when your installation is able to obtain a certificate fr
   * You must be able and willing to open ports 80 and 443 from the entire Internet to the jail, and leave them open.  If this applies, do it **before** running this script.
   * DNS hosting for the domain name needs to be with a provider that Caddy supports, to automatically update the DNS records needed to prove your control over the domain.  See the [Caddy documentation](https://caddyserver.com/docs) under the heading of "DNS Providers" for the supported providers, and what information you'll need in order to proceed.
 
+[Cloudflare](https://www.cloudflare.com/) provides DNS hosting at no cost, and it's well-supported by Caddy.  Cloudflare doesn't directly provide Dynamic DNS service, but [DNS-O-Matic](https://dnsomatic.com/) is a Dynamic DNS provider that will interface with many DNS hosts including Cloudflare, and is also free of charge.  So, even if you have a dynamic IP address (as most residential Internet users do), you don't have your own domain, and you aren't willing to pay for a domain or any other relevant service, and you aren't willing to open any ports from the Internet to your system, you can still get a trusted certificate from Let's Encrypt by following these steps:
+
+* Register a free domain with Freenom.  Be sure to keep up with the renewal requirements.
+* Sign up for a free account with Cloudflare, and activate it for free DNS service only on your domain.
+* Tell Freenom to use Cloudflare for DNS for your domain.
+* Sign up for a free account with DNS-O-Matic, and configure it to update your Cloudflare DNS.
+* Set up FreeNAS (see [this thread](https://www.ixsystems.com/community/threads/dns-o-matic-dynamic-dns-configuration.10326/)), your router, or whatever you prefer to update DNS-O-Matic as your IP address changes.
+* Set up this script to do DNS validation, tell it to use the cloudflare plugin, and give it your email address and Global API key.
+
 If you aren't able or willing to obtain a certificate from Let's Encrypt, this script also supports configuring Caddy with a self-signed certificate, or with no certificate (and thus no HTTPS) at all.
 
 ### Prerequisites (Other)

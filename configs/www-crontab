@@ -1,1 +1,1 @@
-*/15 * * * * /usr/local/bin/php -f /usr/local/www/nextcloud/cron.php
+*/5 * * * * /usr/local/bin/php -f /usr/local/www/nextcloud/cron.php

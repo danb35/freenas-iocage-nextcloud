@@ -334,6 +334,7 @@ iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ app:en
 iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ encryption:enable'
 iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ encryption:disable'
 iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ background:cron'
+iocage exec "${JAIL_NAME}" su -m www -c 'php -f /usr/local/www/nextcloud/cron.php'
 iocage exec "${JAIL_NAME}" crontab -u www /mnt/configs/www-crontab
 
 # Don't need /mnt/configs any more, so unmount it

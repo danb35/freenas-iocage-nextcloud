@@ -11,6 +11,9 @@ yourhostnamehere {
 
 	fastcgi / 127.0.0.1:9000 php {
 		env PATH /bin
+		connect_timeout 3600s
+		read_timeout    3600s
+		send_timeout    3600s
 	}
 
 	header / {
@@ -77,4 +80,5 @@ yourhostnamehere {
 		/README
 	}
 
+	timeouts 3600s
 }

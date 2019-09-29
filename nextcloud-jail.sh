@@ -181,12 +181,18 @@ elif [ "${DATABASE}" = "pgsql" ]; then
 fi
 iocage exec "${JAIL_NAME}" mkdir -p /mnt/configs
 iocage exec "${JAIL_NAME}" mkdir -p /usr/local/www
+mkdir -p /mnt/iocage/jails/${JAIL_NAME}/root/var/db/portsnap
+mkdir -p /mnt/iocage/jails/${JAIL_NAME}/root/mnt/files
+mkdir -p /mnt/iocage/jails/${JAIL_NAME}/root/mnt/configs
+mkdir -p /mnt/iocage/jails/${JAIL_NAME}/root/usr/ports
 iocage fstab -a "${JAIL_NAME}" "${PORTS_PATH}"/ports /usr/ports nullfs rw 0 0
 iocage fstab -a "${JAIL_NAME}" "${PORTS_PATH}"/db /var/db/portsnap nullfs rw 0 0
 iocage fstab -a "${JAIL_NAME}" "${FILES_PATH}" /mnt/files nullfs rw 0 0
 if [ "${DATABASE}" = "mariadb" ]; then
+  mkdir -p /mnt/iocage/jails/${JAIL_NAME}/root/var/db/mysql
   iocage fstab -a "${JAIL_NAME}" "${DB_PATH}"  /var/db/mysql  nullfs  rw  0  0
 elif [ "${DATABASE}" = "pgsql" ]; then
+  mkdir -p /mnt/iocage/jails/${JAIL_NAME}/root/var/db/postgres
   iocage fstab -a "${JAIL_NAME}" "${DB_PATH}"  /var/db/postgres  nullfs  rw  0  0
 fi
 iocage fstab -a "${JAIL_NAME}" "${CONFIGS_PATH}" /mnt/configs nullfs rw 0 0

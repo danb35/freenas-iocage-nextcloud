@@ -248,7 +248,9 @@ fi
 iocage exec "${JAIL_NAME}" cp -f /mnt/configs/php.ini /usr/local/etc/php.ini
 iocage exec "${JAIL_NAME}" cp -f /mnt/configs/redis.conf /usr/local/etc/redis.conf
 iocage exec "${JAIL_NAME}" cp -f /mnt/configs/www.conf /usr/local/etc/php-fpm.d/
-iocage exec "${JAIL_NAME}" cp -f /mnt/configs/remove-staging.sh /root/
+if [ $STANDALONE_CERT -eq 1 ] || [ $DNS_CERT -eq 1 ]; then
+  iocage exec "${JAIL_NAME}" cp -f /mnt/configs/remove-staging.sh /root/
+fi
 if [ $NO_CERT -eq 1 ]; then
   echo "Copying Caddyfile for no SSL"
   iocage exec "${JAIL_NAME}" cp -f /mnt/configs/Caddyfile-nossl /usr/local/www/Caddyfile

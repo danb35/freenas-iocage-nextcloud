@@ -1,5 +1,5 @@
 #!/bin/sh
-# Build an iocage jail under FreeNAS 11.2 using the current release of Nextcloud 16
+# Build an iocage jail under FreeNAS 11.2 using the current release of Nextcloud 17
 # https://github.com/danb35/freenas-iocage-nextcloud
 
 # Check for root privileges
@@ -206,7 +206,7 @@ then
 	exit 1
 fi
 
-FILE="latest-16.tar.bz2"
+FILE="latest-17.tar.bz2"
 if ! iocage exec "${JAIL_NAME}" fetch -o /tmp https://download.nextcloud.com/server/releases/"${FILE}" https://download.nextcloud.com/server/releases/"${FILE}".asc https://nextcloud.com/nextcloud.asc
 then
 	echo "Failed to download Nextcloud"
@@ -248,6 +248,7 @@ fi
 iocage exec "${JAIL_NAME}" cp -f /mnt/configs/php.ini /usr/local/etc/php.ini
 iocage exec "${JAIL_NAME}" cp -f /mnt/configs/redis.conf /usr/local/etc/redis.conf
 iocage exec "${JAIL_NAME}" cp -f /mnt/configs/www.conf /usr/local/etc/php-fpm.d/
+iocage exec "${JAIL_NAME}" cp -f /mnt/configs/remove-staging.sh /root/
 if [ $NO_CERT -eq 1 ]; then
   echo "Copying Caddyfile for no SSL"
   iocage exec "${JAIL_NAME}" cp -f /mnt/configs/Caddyfile-nossl /usr/local/www/Caddyfile
@@ -362,13 +363,7 @@ if [ $STANDALONE_CERT -eq 1 ] || [ $DNS_CERT -eq 1 ]; then
   echo "This certificate will not be trusted by your browser and will cause SSL errors"
   echo "when you connect.  Once you've verified that everything else is working"
   echo "correctly, you should issue a trusted certificate.  To do this, run:"
-  echo "iocage console ${JAIL_NAME}"
-  echo "nano /usr/local/www/Caddyfile"
-  echo "Remove the line that says:"
-  echo "    ca https://acme-staging-v02.api.letsencrypt.org/directory"
-  echo "Then save the file and exit nano.  Run"
-  echo "    service caddy restart"
-  echo "to restart Caddy and obtain a new certificate."
+  echo "  iocage exec ${JAIL_NAME} /root/remove-staging.sh"
   echo ""
 elif [ $SELFSIGNED_CERT -eq 1 ]; then
   echo "You have chosen to create a self-signed TLS certificate for your Nextcloud"

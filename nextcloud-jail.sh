@@ -135,14 +135,14 @@ fi
 cat <<__EOF__ >/tmp/pkg.json
 {
   "pkgs":[
-  "nano","sudo","redis","php72-ctype","gnupg","bash",
-  "php72-dom","php72-gd","php72-iconv","php72-json","php72-mbstring",
-  "php72-posix","php72-simplexml","php72-xmlreader","php72-xmlwriter",
-  "php72-zip","php72-zlib","php72-hash","php72-xml",
-  "php72-session","php72-wddx","php72-xsl","php72-filter",
-  "php72-curl","php72-fileinfo","php72-bz2","php72-intl","php72-openssl",
-  "php72-ldap","php72-ftp","php72-imap","php72-exif","php72-gmp",
-  "php72-memcache","php72-opcache","php72-pcntl", "php72-pecl-imagick", "php72","bash","perl5",
+  "nano","sudo","redis","php73-ctype","gnupg","bash",
+  "php73-dom","php73-gd","php73-iconv","php73-json","php73-mbstring",
+  "php73-posix","php73-simplexml","php73-xmlreader","php73-xmlwriter",
+  "php73-zip","php73-zlib","php73-hash","php73-xml",
+  "php73-session","php73-wddx","php73-xsl","php73-filter",
+  "php73-curl","php73-fileinfo","php73-bz2","php73-intl","php73-openssl",
+  "php73-ldap","php73-ftp","php73-imap","php73-exif","php73-gmp",
+  "php73-memcache","php73-opcache","php73-pcntl", "php73-pecl-imagick", "php73","bash","perl5",
   "p5-Locale-gettext","help2man","texinfo","m4","autoconf"
   ]
 }
@@ -163,7 +163,7 @@ if [ "${RELEASE}" = "11.1-RELEASE" ]; then
   iocage exec "${JAIL_NAME}" pkg upgrade -yf
 fi
 if [ "${DATABASE}" = "mariadb" ]; then
-  iocage exec "${JAIL_NAME}" pkg install -qy mariadb103-server php72-pdo_mysql php72-mysqli
+  iocage exec "${JAIL_NAME}" pkg install -qy mariadb103-server php73-pdo_mysql php73-mysqli
 elif [ "${DATABASE}" = "pgsql" ]; then
   iocage exec "${JAIL_NAME}" pkg install -qy postgresql10-server
 fi
@@ -231,8 +231,8 @@ iocage exec "${JAIL_NAME}" sysrc php_fpm_enable="YES"
 iocage exec "${JAIL_NAME}" make -C /usr/ports/databases/pecl-redis clean install BATCH=yes
 iocage exec "${JAIL_NAME}" make -C /usr/ports/devel/pecl-APCu clean install BATCH=yes
 if [ "${DATABASE}" = "pgsql" ]; then
-  iocage exec "${JAIL_NAME}" make -C /usr/ports/databases/php72-pgsql clean install BATCH=yes
-  iocage exec "${JAIL_NAME}" make -C /usr/ports/databases/php72-pdo_pgsql clean install BATCH=yes
+  iocage exec "${JAIL_NAME}" make -C /usr/ports/databases/php73-pgsql clean install BATCH=yes
+  iocage exec "${JAIL_NAME}" make -C /usr/ports/databases/php73-pdo_pgsql clean install BATCH=yes
 fi
 
 # Generate and install self-signed cert, if necessary

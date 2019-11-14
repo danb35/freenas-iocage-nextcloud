@@ -228,11 +228,11 @@ elif [ "${DATABASE}" = "pgsql" ]; then
 fi
 iocage exec "${JAIL_NAME}" sysrc redis_enable="YES"
 iocage exec "${JAIL_NAME}" sysrc php_fpm_enable="YES"
-iocage exec "${JAIL_NAME}" make -C /usr/ports/databases/pecl-redis clean install BATCH=yes
-iocage exec "${JAIL_NAME}" make -C /usr/ports/devel/pecl-APCu clean install BATCH=yes
+iocage exec "${JAIL_NAME}" sh -c "ALLOW_UNSUPPORTED_SYSTEM=1 make -C /usr/ports/databases/pecl-redis clean install BATCH=yes"
+iocage exec "${JAIL_NAME}" sh -cALLOW_UNSUPPORTED_SYSTEM=1 make -C /usr/ports/devel/pecl-APCu clean install BATCH=yes"
 if [ "${DATABASE}" = "pgsql" ]; then
-  iocage exec "${JAIL_NAME}" make -C /usr/ports/databases/php73-pgsql clean install BATCH=yes
-  iocage exec "${JAIL_NAME}" make -C /usr/ports/databases/php73-pdo_pgsql clean install BATCH=yes
+  iocage exec "${JAIL_NAME}" sh -c "make -C /usr/ports/databases/php73-pgsql clean install BATCH=yes"
+  iocage exec "${JAIL_NAME}" sh -c "make -C /usr/ports/databases/php73-pdo_pgsql clean install BATCH=yes"
 fi
 
 # Generate and install self-signed cert, if necessary

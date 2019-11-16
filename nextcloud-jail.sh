@@ -142,7 +142,7 @@ cat <<__EOF__ >/tmp/pkg.json
   "php73-session","php73-wddx","php73-xsl","php73-filter",
   "php73-curl","php73-fileinfo","php73-bz2","php73-intl","php73-openssl",
   "php73-ldap","php73-ftp","php73-imap","php73-exif","php73-gmp",
-  "php73-memcache","php73-opcache","php73-pcntl", "php73-pecl-imagick", "php73","bash","perl5",
+  "php73-memcache","php73-opcache","php73-pcntl", "php73-pecl-imagick", "bash","perl5",
   "p5-Locale-gettext","help2man","texinfo","m4","autoconf"
   ]
 }
@@ -228,6 +228,7 @@ elif [ "${DATABASE}" = "pgsql" ]; then
 fi
 iocage exec "${JAIL_NAME}" sysrc redis_enable="YES"
 iocage exec "${JAIL_NAME}" sysrc php_fpm_enable="YES"
+iocage exec "${JAIL_NAME}" sh -c "ALLOW_UNSUPPORTED_SYSTEM=1 make -C /usr/ports/lang/php73 clean reinstall BATCH=yes"
 iocage exec "${JAIL_NAME}" sh -c "ALLOW_UNSUPPORTED_SYSTEM=1 make -C /usr/ports/databases/pecl-redis clean install BATCH=yes"
 iocage exec "${JAIL_NAME}" sh -c "ALLOW_UNSUPPORTED_SYSTEM=1 make -C /usr/ports/devel/pecl-APCu clean install BATCH=yes"
 if [ "${DATABASE}" = "pgsql" ]; then

@@ -1,4 +1,4 @@
-yourhostnamehere {
+yourhostnamehere JAIL-IP {
 
 	root   /usr/local/www/nextcloud
 	log    /var/log/nextcloud_access.log
@@ -25,6 +25,7 @@ yourhostnamehere {
 		X-Robots-Tag				"none"
 		X-Download-Options			"noopen"
 		X-Permitted-Cross-Domain-Policies	"none"
+		X-Frame-Options "SAMEORIGIN"
 		Referrer-Policy				"no-referrer"
 	}
 

@@ -41,8 +41,8 @@ elif [ "${DATABASE}" = "pgsql" ]; then
 fi
 
 ADMIN_PASSWORD=$(openssl rand -base64 12)
-RELEASE=$(freebsd-version | sed "s/STABLE/RELEASE/g")
-
+ RELEASE=$(freebsd-version | sed "s/STABLE/RELEASE/g" | sed "s/-p[0-9]*//")
+ 
 # Check for nextcloud-config and set configuration
 if ! [ -e "${SCRIPTPATH}"/nextcloud-config ]; then
   echo "${SCRIPTPATH}/nextcloud-config must exist."
@@ -138,11 +138,11 @@ cat <<__EOF__ >/tmp/pkg.json
   "nano","sudo","redis","php73-ctype","gnupg","bash",
   "php73-dom","php73-gd","php73-iconv","php73-json","php73-mbstring",
   "php73-posix","php73-simplexml","php73-xmlreader","php73-xmlwriter",
-  "php73-zip","php73-zlib","php73-hash","php73-xml",
-  "php73-session","php73-wddx","php73-xsl","php73-filter",
+  "php73-zip","php73-zlib","php73-hash","php73-xml","php73","php73-pecl-redis",
+  "php73-session","php73-wddx","php73-xsl","php73-filter","php73-pecl-APCu",
   "php73-curl","php73-fileinfo","php73-bz2","php73-intl","php73-openssl",
   "php73-ldap","php73-ftp","php73-imap","php73-exif","php73-gmp",
-  "php73-memcache","php73-opcache","php73-pcntl", "php73-pecl-imagick", "bash","perl5",
+  "php73-pecl-memcache","php73-pecl-imagick","bash","perl5",
   "p5-Locale-gettext","help2man","texinfo","m4","autoconf"
   ]
 }
@@ -155,17 +155,10 @@ then
 fi
 rm /tmp/pkg.json
 
-# fix 'libdl.so.1 missing' error in 11.1 versions, by reinstalling packages from older FreeBSD release
-# source: https://forums.freenas.org/index.php?threads/openvpn-fails-in-jail-with-libdl-so-1-not-found-error.70391/
-if [ "${RELEASE}" = "11.1-RELEASE" ]; then
-  iocage exec "${JAIL_NAME}" sed -i '' "s/quarterly/release_2/" /etc/pkg/FreeBSD.conf
-  iocage exec "${JAIL_NAME}" pkg update -f
-  iocage exec "${JAIL_NAME}" pkg upgrade -yf
-fi
 if [ "${DATABASE}" = "mariadb" ]; then
   iocage exec "${JAIL_NAME}" pkg install -qy mariadb103-server php73-pdo_mysql php73-mysqli
 elif [ "${DATABASE}" = "pgsql" ]; then
-  iocage exec "${JAIL_NAME}" pkg install -qy postgresql10-server
+  iocage exec "${JAIL_NAME}" pkg install -qy postgresql10-server php73-pgsql php73-pdo_pgsql
 fi
 mkdir -p "${DB_PATH}"/
 chown -R 88:88 "${DB_PATH}"/
@@ -206,7 +199,7 @@ then
 	exit 1
 fi
 
-FILE="latest-17.tar.bz2"
+FILE="latest-18.tar.bz2"
 if ! iocage exec "${JAIL_NAME}" fetch -o /tmp https://download.nextcloud.com/server/releases/"${FILE}" https://download.nextcloud.com/server/releases/"${FILE}".asc https://nextcloud.com/nextcloud.asc
 then
 	echo "Failed to download Nextcloud"
@@ -228,13 +221,8 @@ elif [ "${DATABASE}" = "pgsql" ]; then
 fi
 iocage exec "${JAIL_NAME}" sysrc redis_enable="YES"
 iocage exec "${JAIL_NAME}" sysrc php_fpm_enable="YES"
-iocage exec "${JAIL_NAME}" sh -c "ALLOW_UNSUPPORTED_SYSTEM=1 make -C /usr/ports/lang/php73 clean reinstall BATCH=yes"
-iocage exec "${JAIL_NAME}" sh -c "ALLOW_UNSUPPORTED_SYSTEM=1 make -C /usr/ports/databases/pecl-redis clean install BATCH=yes"
-iocage exec "${JAIL_NAME}" sh -c "ALLOW_UNSUPPORTED_SYSTEM=1 make -C /usr/ports/devel/pecl-APCu clean install BATCH=yes"
-if [ "${DATABASE}" = "pgsql" ]; then
-  iocage exec "${JAIL_NAME}" sh -c "make -C /usr/ports/databases/php73-pgsql clean install BATCH=yes"
-  iocage exec "${JAIL_NAME}" sh -c "make -C /usr/ports/databases/php73-pdo_pgsql clean install BATCH=yes"
-fi
+iocage exec "${JAIL_NAME}" sh -c "make -C /usr/ports/www/php73-opcache clean install BATCH=yes"
+iocage exec "${JAIL_NAME}" sh -c "make -C /usr/ports/devel/php73-pcntl clean install BATCH=yes"
 
 # Generate and install self-signed cert, if necessary
 if [ $SELFSIGNED_CERT -eq 1 ]; then
@@ -269,6 +257,7 @@ if [ "${DATABASE}" = "mariadb" ]; then
 fi
 iocage exec "${JAIL_NAME}" sed -i '' "s/yourhostnamehere/${HOST_NAME}/" /usr/local/www/Caddyfile
 iocage exec "${JAIL_NAME}" sed -i '' "s/DNS-PLACEHOLDER/${DNS_SETTING}/" /usr/local/www/Caddyfile
+iocage exec "${JAIL_NAME}" sed -i '' "s/JAIL-IP/${JAIL_IP}/" /usr/local/www/Caddyfile
 iocage exec "${JAIL_NAME}" sed -i '' "s|mytimezone|${TIME_ZONE}|" /usr/local/etc/php.ini
 
 iocage exec "${JAIL_NAME}" sysrc caddy_enable="YES"
@@ -316,6 +305,8 @@ if [ "${DATABASE}" = "mariadb" ]; then
 elif [ "${DATABASE}" = "pgsql" ]; then
   iocage exec "${JAIL_NAME}" su -m www -c "php /usr/local/www/nextcloud/occ maintenance:install --database=\"pgsql\" --database-name=\"nextcloud\" --database-user=\"nextcloud\" --database-pass=\"${DB_PASSWORD}\" --database-host=\"localhost:/tmp/.s.PGSQL.5432\" --admin-user=\"admin\" --admin-pass=\"${ADMIN_PASSWORD}\" --data-dir=\"/mnt/files\""
 fi
+iocage exec "${JAIL_NAME}" su -m www -c "php /usr/local/www/nextcloud/occ db:add-missing-indices"
+iocage exec "${JAIL_NAME}" su -m www -c "php /usr/local/www/nextcloud/occ db:convert-filecache-bigint --no-interaction"
 iocage exec "${JAIL_NAME}" su -m www -c "php /usr/local/www/nextcloud/occ config:system:set logtimezone --value=\"${TIME_ZONE}\""
 iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ config:system:set log_type --value="file"'
 iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ config:system:set logfile --value="/var/log/nextcloud.log"'

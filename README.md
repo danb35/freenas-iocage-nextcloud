@@ -1,12 +1,10 @@
 # freenas-iocage-nextcloud
-Script to create an iocage jail on FreeNAS for the latest Nextcloud 17 release, including Caddy 1.0, MariaDB 10.3/PostgreSQL 10, and Let's Encrypt
+Script to create an iocage jail on FreeNAS for the latest Nextcloud 18 release, including Caddy 1.0, MariaDB 10.3/PostgreSQL 10, and Let's Encrypt
 
-This script will create an iocage jail on FreeNAS 11.1 or 11.2 with the latest release of Nextcloud 17, along with its dependencies.  It will obtain a trusted certificate from Let's Encrypt for the system, install it, and configure it to renew automatically.  It will create the Nextcloud database and generate a strong root password and user password for the database system.  It will configure the jail to store the database and Nextcloud user data outside the jail, so it will not be lost in the event you need to rebuild the jail.
+This script will create an iocage jail on FreeNAS 11.2-U7 or 11.3 with the latest release of Nextcloud 18, along with its dependencies.  It will obtain a trusted certificate from Let's Encrypt for the system, install it, and configure it to renew automatically.  It will create the Nextcloud database and generate a strong root password and user password for the database system.  It will configure the jail to store the database and Nextcloud user data outside the jail, so it will not be lost in the event you need to rebuild the jail.
 
 ## Status
-This script appears to work well on all FreeNAS 11.2 releases.  FreeNAS 11.2-U2.1 (and perhaps -U2) have a bug that results in jail mountpoints being lost on system restart.  The most common indication of this is that the Nextcloud page doesn't appear when you browse to your installation.  If you experience this, first run `iocage fstab -l nextcloud`.  If you don't see four entries, you've been bitten.  To recover, enter the jail's shell.  Run `service mysql-server stop` followed by `rm -rf /var/db/mysql/*`.  Then exit the shell and stop the jail.
-
-Next, re-add the mountpoints, either through the FreeNAS GUI or at the shell, whichever you prefer.  $DB_PATH (which by default is $POOL_PATH/db) needs to be mounted at /var/db/mysql/.  $FILES_PATH (which by default is $POOL_PATH/files) needs to be mounted at /media/files.  Then restart the jail and you should be good to go.
+This script will work with FreeNAS 11.3, and it should also work with 11.2-U7.  Due to the EOL status of FreeBSD 11.2, it is unlikely to work reliably with earlier releases of FreeNAS.
 
 ## Usage
 

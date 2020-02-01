@@ -27,6 +27,7 @@ DNS_CERT=0
 NO_CERT=0
 DL_FLAGS=""
 DNS_SETTING=""
+RELEASE="11.3-RELEASE"
 
 SCRIPT=$(readlink -f "$0")
 SCRIPTPATH=$(dirname "${SCRIPT}")
@@ -41,7 +42,7 @@ elif [ "${DATABASE}" = "pgsql" ]; then
 fi
 
 ADMIN_PASSWORD=$(openssl rand -base64 12)
-RELEASE=$(freebsd-version | sed "s/STABLE/RELEASE/g" | sed "s/-p[0-9]*//")
+#RELEASE=$(freebsd-version | sed "s/STABLE/RELEASE/g" | sed "s/-p[0-9]*//")
 
 # Check for nextcloud-config and set configuration
 if ! [ -e "${SCRIPTPATH}"/nextcloud-config ]; then

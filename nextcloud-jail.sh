@@ -152,6 +152,24 @@ fi
 #
 #####
 
+# List packages to be auto-installed after jail creation
+cat <<__EOF__ >/tmp/pkg.json
+	{
+  "pkgs":[
+  "nano","sudo","redis","php73-ctype","gnupg","bash",
+  "php73-dom","php73-gd","php73-iconv","php73-json","php73-mbstring",
+  "php73-posix","php73-simplexml","php73-xmlreader","php73-xmlwriter",
+  "php73-zip","php73-zlib","php73-hash","php73-xml","php73","php73-pecl-redis",
+  "php73-session","php73-wddx","php73-xsl","php73-filter","php73-pecl-APCu",
+  "php73-curl","php73-fileinfo","php73-bz2","php73-intl","php73-openssl",
+  "php73-ldap","php73-ftp","php73-imap","php73-exif","php73-gmp",
+  "php73-pecl-memcache","php73-pecl-imagick","bash","perl5",
+  "p5-Locale-gettext","help2man","texinfo","m4","autoconf"
+  ]
+}
+__EOF__
+
+# Create the jail and install previously listed packages
 if ! iocage create --name "${JAIL_NAME}" -p /tmp/pkg.json -r "${RELEASE}" ip4_addr="${INTERFACE}|${JAIL_IP}/24" defaultrouter="${DEFAULT_GW_IP}" boot="on" host_hostname="${JAIL_NAME}" vnet="${VNET}"
 then
 	echo "Failed to create jail"
@@ -201,26 +219,9 @@ iocage exec "${JAIL_NAME}" chmod -R 770 /mnt/files
 
 #####
 #
-# Dependency installation
+# Additional Dependency installation
 #
 #####
-
-# Create the jail, pre-installing needed packages
-cat <<__EOF__ >/tmp/pkg.json
-	{
-  "pkgs":[
-  "nano","sudo","redis","php73-ctype","gnupg","bash",
-  "php73-dom","php73-gd","php73-iconv","php73-json","php73-mbstring",
-  "php73-posix","php73-simplexml","php73-xmlreader","php73-xmlwriter",
-  "php73-zip","php73-zlib","php73-hash","php73-xml","php73","php73-pecl-redis",
-  "php73-session","php73-wddx","php73-xsl","php73-filter","php73-pecl-APCu",
-  "php73-curl","php73-fileinfo","php73-bz2","php73-intl","php73-openssl",
-  "php73-ldap","php73-ftp","php73-imap","php73-exif","php73-gmp",
-  "php73-pecl-memcache","php73-pecl-imagick","bash","perl5",
-  "p5-Locale-gettext","help2man","texinfo","m4","autoconf"
-  ]
-}
-__EOF__
 
 if [ "${DATABASE}" = "mariadb" ]; then
 	iocage exec "${JAIL_NAME}" pkg install -qy mariadb103-server php73-pdo_mysql php73-mysqli

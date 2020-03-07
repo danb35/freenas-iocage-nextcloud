@@ -32,7 +32,7 @@ RELEASE="11.3-RELEASE"
 SCRIPT=$(readlink -f "$0")
 SCRIPTPATH=$(dirname "${SCRIPT}")
 . "${SCRIPTPATH}"/nextcloud-config
-CONFIGS_PATH="${SCRIPTPATH}"/includes
+INCLUDES_PATH="${SCRIPTPATH}"/includes
 DB_ROOT_PASSWORD=$(openssl rand -base64 16)
 DB_PASSWORD=$(openssl rand -base64 16)
 if [ "${DATABASE}" = "mariadb" ]; then
@@ -189,7 +189,7 @@ elif [ "${DATABASE}" = "pgsql" ]; then
   mkdir -p /mnt/iocage/jails/${JAIL_NAME}/root/var/db/postgres
   iocage fstab -a "${JAIL_NAME}" "${DB_PATH}"  /var/db/postgres  nullfs  rw  0  0
 fi
-iocage fstab -a "${JAIL_NAME}" "${CONFIGS_PATH}" /mnt/includes nullfs rw 0 0
+iocage fstab -a "${JAIL_NAME}" "${INCLUDES_PATH}" /mnt/includes nullfs rw 0 0
 iocage exec "${JAIL_NAME}" chown -R www:www /mnt/files
 iocage exec "${JAIL_NAME}" chmod -R 770 /mnt/files
 iocage exec "${JAIL_NAME}" "if [ -z /usr/ports ]; then portsnap fetch extract; else portsnap auto; fi"
@@ -229,7 +229,7 @@ iocage exec "${JAIL_NAME}" sh -c "make -C /usr/ports/devel/php73-pcntl clean ins
 if [ $SELFSIGNED_CERT -eq 1 ]; then
   iocage exec "${JAIL_NAME}" mkdir -p /usr/local/etc/pki/tls/private
   iocage exec "${JAIL_NAME}" mkdir -p /usr/local/etc/pki/tls/certs
-  openssl req -new -newkey rsa:4096 -days 3650 -nodes -x509 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=${HOST_NAME}" -keyout "${CONFIGS_PATH}"/privkey.pem -out "${CONFIGS_PATH}"/fullchain.pem
+  openssl req -new -newkey rsa:4096 -days 3650 -nodes -x509 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=${HOST_NAME}" -keyout "${INCLUDES_PATH}"/privkey.pem -out "${INCLUDES_PATH}"/fullchain.pem
   iocage exec "${JAIL_NAME}" cp /mnt/includes/privkey.pem /usr/local/etc/pki/tls/private/privkey.pem
   iocage exec "${JAIL_NAME}" cp /mnt/includes/fullchain.pem /usr/local/etc/pki/tls/certs/fullchain.pem
 fi
@@ -334,7 +334,7 @@ iocage exec "${JAIL_NAME}" su -m www -c 'php -f /usr/local/www/nextcloud/cron.ph
 iocage exec "${JAIL_NAME}" crontab -u www /mnt/includes/www-crontab
 
 # Don't need /mnt/includes any more, so unmount it
-iocage fstab -r "${JAIL_NAME}" "${CONFIGS_PATH}" /mnt/includes nullfs rw 0 0
+iocage fstab -r "${JAIL_NAME}" "${INCLUDES_PATH}" /mnt/includes nullfs rw 0 0
 
 # Done!
 echo "Installation complete!"

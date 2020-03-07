@@ -32,7 +32,7 @@ RELEASE="11.3-RELEASE"
 SCRIPT=$(readlink -f "$0")
 SCRIPTPATH=$(dirname "${SCRIPT}")
 . "${SCRIPTPATH}"/nextcloud-config
-CONFIGS_PATH="${SCRIPTPATH}"/configs
+CONFIGS_PATH="${SCRIPTPATH}"/includes
 DB_ROOT_PASSWORD=$(openssl rand -base64 16)
 DB_PASSWORD=$(openssl rand -base64 16)
 if [ "${DATABASE}" = "mariadb" ]; then
@@ -173,11 +173,11 @@ if [ "${DATABASE}" = "mariadb" ]; then
 elif [ "${DATABASE}" = "pgsql" ]; then
   iocage exec "${JAIL_NAME}" mkdir -p /var/db/postgres
 fi
-iocage exec "${JAIL_NAME}" mkdir -p /mnt/configs
+iocage exec "${JAIL_NAME}" mkdir -p /mnt/includes
 iocage exec "${JAIL_NAME}" mkdir -p /usr/local/www
 mkdir -p /mnt/iocage/jails/${JAIL_NAME}/root/var/db/portsnap
 mkdir -p /mnt/iocage/jails/${JAIL_NAME}/root/mnt/files
-mkdir -p /mnt/iocage/jails/${JAIL_NAME}/root/mnt/configs
+mkdir -p /mnt/iocage/jails/${JAIL_NAME}/root/mnt/includes
 mkdir -p /mnt/iocage/jails/${JAIL_NAME}/root/usr/ports
 iocage fstab -a "${JAIL_NAME}" "${PORTS_PATH}"/ports /usr/ports nullfs rw 0 0
 iocage fstab -a "${JAIL_NAME}" "${PORTS_PATH}"/db /var/db/portsnap nullfs rw 0 0
@@ -189,7 +189,7 @@ elif [ "${DATABASE}" = "pgsql" ]; then
   mkdir -p /mnt/iocage/jails/${JAIL_NAME}/root/var/db/postgres
   iocage fstab -a "${JAIL_NAME}" "${DB_PATH}"  /var/db/postgres  nullfs  rw  0  0
 fi
-iocage fstab -a "${JAIL_NAME}" "${CONFIGS_PATH}" /mnt/configs nullfs rw 0 0
+iocage fstab -a "${JAIL_NAME}" "${CONFIGS_PATH}" /mnt/includes nullfs rw 0 0
 iocage exec "${JAIL_NAME}" chown -R www:www /mnt/files
 iocage exec "${JAIL_NAME}" chmod -R 770 /mnt/files
 iocage exec "${JAIL_NAME}" "if [ -z /usr/ports ]; then portsnap fetch extract; else portsnap auto; fi"
@@ -230,31 +230,31 @@ if [ $SELFSIGNED_CERT -eq 1 ]; then
   iocage exec "${JAIL_NAME}" mkdir -p /usr/local/etc/pki/tls/private
   iocage exec "${JAIL_NAME}" mkdir -p /usr/local/etc/pki/tls/certs
   openssl req -new -newkey rsa:4096 -days 3650 -nodes -x509 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=${HOST_NAME}" -keyout "${CONFIGS_PATH}"/privkey.pem -out "${CONFIGS_PATH}"/fullchain.pem
-  iocage exec "${JAIL_NAME}" cp /mnt/configs/privkey.pem /usr/local/etc/pki/tls/private/privkey.pem
-  iocage exec "${JAIL_NAME}" cp /mnt/configs/fullchain.pem /usr/local/etc/pki/tls/certs/fullchain.pem
+  iocage exec "${JAIL_NAME}" cp /mnt/includes/privkey.pem /usr/local/etc/pki/tls/private/privkey.pem
+  iocage exec "${JAIL_NAME}" cp /mnt/includes/fullchain.pem /usr/local/etc/pki/tls/certs/fullchain.pem
 fi
 
 # Copy and edit pre-written config files
-iocage exec "${JAIL_NAME}" cp -f /mnt/configs/php.ini /usr/local/etc/php.ini
-iocage exec "${JAIL_NAME}" cp -f /mnt/configs/redis.conf /usr/local/etc/redis.conf
-iocage exec "${JAIL_NAME}" cp -f /mnt/configs/www.conf /usr/local/etc/php-fpm.d/
+iocage exec "${JAIL_NAME}" cp -f /mnt/includes/php.ini /usr/local/etc/php.ini
+iocage exec "${JAIL_NAME}" cp -f /mnt/includes/redis.conf /usr/local/etc/redis.conf
+iocage exec "${JAIL_NAME}" cp -f /mnt/includes/www.conf /usr/local/etc/php-fpm.d/
 if [ $STANDALONE_CERT -eq 1 ] || [ $DNS_CERT -eq 1 ]; then
-  iocage exec "${JAIL_NAME}" cp -f /mnt/configs/remove-staging.sh /root/
+  iocage exec "${JAIL_NAME}" cp -f /mnt/includes/remove-staging.sh /root/
 fi
 if [ $NO_CERT -eq 1 ]; then
   echo "Copying Caddyfile for no SSL"
-  iocage exec "${JAIL_NAME}" cp -f /mnt/configs/Caddyfile-nossl /usr/local/www/Caddyfile
+  iocage exec "${JAIL_NAME}" cp -f /mnt/includes/Caddyfile-nossl /usr/local/www/Caddyfile
 elif [ $SELFSIGNED_CERT -eq 1 ]; then
   echo "Copying Caddyfile for self-signed cert"
-  iocage exec "${JAIL_NAME}" cp -f /mnt/configs/Caddyfile-selfsigned /usr/local/www/Caddyfile
+  iocage exec "${JAIL_NAME}" cp -f /mnt/includes/Caddyfile-selfsigned /usr/local/www/Caddyfile
 else
   echo "Copying Caddyfile for Let's Encrypt cert"
-  iocage exec "${JAIL_NAME}" cp -f /mnt/configs/Caddyfile /usr/local/www/
+  iocage exec "${JAIL_NAME}" cp -f /mnt/includes/Caddyfile /usr/local/www/
 fi
-iocage exec "${JAIL_NAME}" cp -f /mnt/configs/caddy /usr/local/etc/rc.d/
+iocage exec "${JAIL_NAME}" cp -f /mnt/includes/caddy /usr/local/etc/rc.d/
 
 if [ "${DATABASE}" = "mariadb" ]; then
-  iocage exec "${JAIL_NAME}" cp -f /mnt/configs/my-system.cnf /var/db/mysql/my.cnf
+  iocage exec "${JAIL_NAME}" cp -f /mnt/includes/my-system.cnf /var/db/mysql/my.cnf
 fi
 iocage exec "${JAIL_NAME}" sed -i '' "s/yourhostnamehere/${HOST_NAME}/" /usr/local/www/Caddyfile
 iocage exec "${JAIL_NAME}" sed -i '' "s/DNS-PLACEHOLDER/${DNS_SETTING}/" /usr/local/www/Caddyfile
@@ -277,10 +277,10 @@ if [ "${DATABASE}" = "mariadb" ]; then
   iocage exec "${JAIL_NAME}" mysql -u root -e "DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';"
   iocage exec "${JAIL_NAME}" mysql -u root -e "UPDATE mysql.user SET Password=PASSWORD('${DB_ROOT_PASSWORD}') WHERE User='root';"
   iocage exec "${JAIL_NAME}" mysqladmin reload
-  iocage exec "${JAIL_NAME}" cp -f /mnt/configs/my.cnf /root/.my.cnf
+  iocage exec "${JAIL_NAME}" cp -f /mnt/includes/my.cnf /root/.my.cnf
   iocage exec "${JAIL_NAME}" sed -i '' "s|mypassword|${DB_ROOT_PASSWORD}|" /root/.my.cnf
 elif [ "${DATABASE}" = "pgsql" ]; then
-  iocage exec "${JAIL_NAME}" cp -f /mnt/configs/pgpass /root/.pgpass
+  iocage exec "${JAIL_NAME}" cp -f /mnt/includes/pgpass /root/.pgpass
   iocage exec "${JAIL_NAME}" chmod 600 /root/.pgpass
   iocage exec "${JAIL_NAME}" chown postgres /var/db/postgres/
   iocage exec "${JAIL_NAME}" /usr/local/etc/rc.d/postgresql initdb
@@ -331,10 +331,10 @@ iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ encryp
 iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ encryption:disable'
 iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ background:cron'
 iocage exec "${JAIL_NAME}" su -m www -c 'php -f /usr/local/www/nextcloud/cron.php'
-iocage exec "${JAIL_NAME}" crontab -u www /mnt/configs/www-crontab
+iocage exec "${JAIL_NAME}" crontab -u www /mnt/includes/www-crontab
 
-# Don't need /mnt/configs any more, so unmount it
-iocage fstab -r "${JAIL_NAME}" "${CONFIGS_PATH}" /mnt/configs nullfs rw 0 0
+# Don't need /mnt/includes any more, so unmount it
+iocage fstab -r "${JAIL_NAME}" "${CONFIGS_PATH}" /mnt/includes nullfs rw 0 0
 
 # Done!
 echo "Installation complete!"

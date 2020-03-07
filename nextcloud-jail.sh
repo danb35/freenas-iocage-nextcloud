@@ -8,6 +8,12 @@ if ! [ $(id -u) = 0 ]; then
    exit 1
 fi
 
+#####
+#
+# General configuration
+#
+#####
+
 # Initialize defaults
 JAIL_IP=""
 DEFAULT_GW_IP=""
@@ -44,11 +50,19 @@ fi
 ADMIN_PASSWORD=$(openssl rand -base64 12)
 #RELEASE=$(freebsd-version | sed "s/STABLE/RELEASE/g" | sed "s/-p[0-9]*//")
 
+
+
 # Check for nextcloud-config and set configuration
 if ! [ -e "${SCRIPTPATH}"/nextcloud-config ]; then
   echo "${SCRIPTPATH}/nextcloud-config must exist."
   exit 1
 fi
+
+#####
+#
+# Input/Config Sanity checks
+#
+#####
 
 # Check that necessary variables were set by nextcloud-config
 if [ -z "${JAIL_IP}" ]; then
@@ -132,9 +146,15 @@ if [ "$(ls -A "${DB_PATH}")" ]; then
   exit 1
 fi
 
-# Create the jail, pre-installing needed packages
+#####
+#
+# Jail Creation
+#
+#####
+
+# List packages to be auto-installed after jail creation
 cat <<__EOF__ >/tmp/pkg.json
-{
+	{
   "pkgs":[
   "nano","sudo","redis","php73-ctype","gnupg","bash",
   "php73-dom","php73-gd","php73-iconv","php73-json","php73-mbstring",
@@ -149,6 +169,7 @@ cat <<__EOF__ >/tmp/pkg.json
 }
 __EOF__
 
+# Create the jail and install previously listed packages
 if ! iocage create --name "${JAIL_NAME}" -p /tmp/pkg.json -r "${RELEASE}" ip4_addr="${INTERFACE}|${JAIL_IP}/24" defaultrouter="${DEFAULT_GW_IP}" boot="on" host_hostname="${JAIL_NAME}" vnet="${VNET}"
 then
 	echo "Failed to create jail"
@@ -156,11 +177,13 @@ then
 fi
 rm /tmp/pkg.json
 
-if [ "${DATABASE}" = "mariadb" ]; then
-  iocage exec "${JAIL_NAME}" pkg install -qy mariadb103-server php73-pdo_mysql php73-mysqli
-elif [ "${DATABASE}" = "pgsql" ]; then
-  iocage exec "${JAIL_NAME}" pkg install -qy postgresql10-server php73-pgsql php73-pdo_pgsql
-fi
+#####
+#
+# Folder Creation and Mounting
+#
+#####
+
+
 mkdir -p "${DB_PATH}"/
 chown -R 88:88 "${DB_PATH}"/
 mkdir -p "${FILES_PATH}"
@@ -192,13 +215,37 @@ fi
 iocage fstab -a "${JAIL_NAME}" "${CONFIGS_PATH}" /mnt/configs nullfs rw 0 0
 iocage exec "${JAIL_NAME}" chown -R www:www /mnt/files
 iocage exec "${JAIL_NAME}" chmod -R 770 /mnt/files
+
+
+#####
+#
+# Additional Dependency installation
+#
+#####
+
+if [ "${DATABASE}" = "mariadb" ]; then
+	iocage exec "${JAIL_NAME}" pkg install -qy mariadb103-server php73-pdo_mysql php73-mysqli
+elif [ "${DATABASE}" = "pgsql" ]; then
+  iocage exec "${JAIL_NAME}" pkg install -qy postgresql10-server php73-pgsql php73-pdo_pgsql
+fi
+
 iocage exec "${JAIL_NAME}" "if [ -z /usr/ports ]; then portsnap fetch extract; else portsnap auto; fi"
+
+iocage exec "${JAIL_NAME}" sh -c "make -C /usr/ports/www/php73-opcache clean install BATCH=yes"
+iocage exec "${JAIL_NAME}" sh -c "make -C /usr/ports/devel/php73-pcntl clean install BATCH=yes"
+
 fetch -o /tmp https://getcaddy.com
 if ! iocage exec "${JAIL_NAME}" bash -s personal "${DL_FLAGS}" < /tmp/getcaddy.com
 then
 	echo "Failed to download/install Caddy"
 	exit 1
 fi
+
+#####
+#
+# Configuration and Nextcloud installation  
+#
+#####
 
 FILE="latest-18.tar.bz2"
 if ! iocage exec "${JAIL_NAME}" fetch -o /tmp https://download.nextcloud.com/server/releases/"${FILE}" https://download.nextcloud.com/server/releases/"${FILE}".asc https://nextcloud.com/nextcloud.asc
@@ -222,8 +269,7 @@ elif [ "${DATABASE}" = "pgsql" ]; then
 fi
 iocage exec "${JAIL_NAME}" sysrc redis_enable="YES"
 iocage exec "${JAIL_NAME}" sysrc php_fpm_enable="YES"
-iocage exec "${JAIL_NAME}" sh -c "make -C /usr/ports/www/php73-opcache clean install BATCH=yes"
-iocage exec "${JAIL_NAME}" sh -c "make -C /usr/ports/devel/php73-pcntl clean install BATCH=yes"
+
 
 # Generate and install self-signed cert, if necessary
 if [ $SELFSIGNED_CERT -eq 1 ]; then

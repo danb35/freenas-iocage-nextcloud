@@ -29,6 +29,7 @@ DB_PATH=""
 FILES_PATH=""
 PORTS_PATH=""
 CONFIG_PATH=""
+THEMES_PATH=""
 STANDALONE_CERT=0
 SELFSIGNED_CERT=0
 DNS_CERT=0
@@ -130,6 +131,9 @@ fi
 if [ -z "${CONFIG_PATH}" ]; then
   CONFIG_PATH="${POOL_PATH}"/nextcloud/config
 fi
+if [ -z "${THEMES_PATH}" ]; then
+  THEMES_PATH="${POOL_PATH}"/nextcloud/themes
+fi
 if [ -z "${PORTS_PATH}" ]; then
   PORTS_PATH="${POOL_PATH}"/portsnap
 fi
@@ -140,20 +144,29 @@ if [ "${DB_PATH}" = "${FILES_PATH}" ] || [ "${FILES_PATH}" = "${PORTS_PATH}" ] |
 then
   echo "DB_PATH, FILES_PATH, CONFIG_PATH and PORTS_PATH must all be different!"
   exit 1
+elif [ "${THEMES_PATH}" = "${THEMES_PATH}" ] || [ "${THEMES_PATH}" = "${PORTS_PATH}" ] || [ "${THEMES_PATH}" = "${DB_PATH}" ] || [ "${THEMES_PATH}" = "${CONFIG_PATH}" ]
+  echo "DB_PATH, FILES_PATH, CONFIG_PATH and PORTS_PATH must all be different!"
+  exit 1
 fi
 
-if [ "${DB_PATH}" = "${POOL_PATH}" ] || [ "${FILES_PATH}" = "${POOL_PATH}" ] || [ "${PORTS_PATH}" = "${POOL_PATH}" ] || [ "${CONFIG_PATH}" = "${POOL_PATH}" ]
+if [ "${DB_PATH}" = "${POOL_PATH}" ] || [ "${FILES_PATH}" = "${POOL_PATH}" ] || [ "${PORTS_PATH}" = "${POOL_PATH}" ] || [ "${CONFIG_PATH}" = "${POOL_PATH}" ] || [ "${THEMES_PATH}" = "${POOL_PATH}" ]
 then
   echo "DB_PATH, FILES_PATH, and PORTS_PATH must all be different"
   echo "from POOL_PATH!"
   exit 1
 fi
 
-# Make sure DB_PATH is empty -- if not, MariaDB/PostgreSQL will choke
-if [ "$(ls -A "${DB_PATH}")" ]; then
-  echo "${DB_PATH} is not empty!"
-  echo "DB_PATH must be empty, otherwise this script will break your existing database."
-  exit 1
+# Check for reinstall
+if [ "$(ls -A "${CONFIG_PATH}")" ]; then
+	echo "Existing Nextcloud config detected... Checking Database compatibility for reinstall"
+	if [ "$(ls -A "${DB_PATH}/${DATABASE}")" ]; then
+		echo "Database is compatible, continuing..."
+		REINSTALL="true"
+	else
+		echo "ERROR: You can not reinstall without the previous database"
+		echo "Please try again after removing your config files or using the same database used previously"
+		exit 1
+	fi
 fi
 
 #####
@@ -208,20 +221,23 @@ elif [ "${DATABASE}" = "pgsql" ]; then
 fi
 iocage exec "${JAIL_NAME}" mkdir -p /mnt/includes
 iocage exec "${JAIL_NAME}" mkdir -p /usr/local/www/nextcloud/config
+mkdir -p "${JAILS_MOUNT}"/jails/${JAIL_NAME}/root/usr/local/www/nextcloud/themes
 mkdir -p "${JAILS_MOUNT}"/jails/${JAIL_NAME}/root/var/db/portsnap
 mkdir -p "${JAILS_MOUNT}"/jails/${JAIL_NAME}/root/mnt/files
 mkdir -p "${JAILS_MOUNT}"/jails/${JAIL_NAME}/root/mnt/includes
 mkdir -p "${JAILS_MOUNT}"/jails/${JAIL_NAME}/root/usr/ports
+
 iocage fstab -a "${JAIL_NAME}" "${PORTS_PATH}"/ports /usr/ports nullfs rw 0 0
 iocage fstab -a "${JAIL_NAME}" "${PORTS_PATH}"/db /var/db/portsnap nullfs rw 0 0
 iocage fstab -a "${JAIL_NAME}" "${FILES_PATH}" /mnt/files nullfs rw 0 0
 iocage fstab -a "${JAIL_NAME}" "${CONFIG_PATH}" /usr/local/www/nextcloud/config nullfs rw 0 0
+iocage fstab -a "${JAIL_NAME}" "${CONFIG_PATH}" /usr/local/www/nextcloud/themes nullfs rw 0 0
 if [ "${DATABASE}" = "mariadb" ]; then
   mkdir -p "${JAILS_MOUNT}"/jails/${JAIL_NAME}/root/var/db/mysql
-  iocage fstab -a "${JAIL_NAME}" "${DB_PATH}"  /var/db/mysql  nullfs  rw  0  0
+  iocage fstab -a "${JAIL_NAME}" "${DB_PATH}/mariadb"  /var/db/mysql  nullfs  rw  0  0
 elif [ "${DATABASE}" = "pgsql" ]; then
   mkdir -p "${JAILS_MOUNT}"/jails/${JAIL_NAME}/root/var/db/postgres
-  iocage fstab -a "${JAIL_NAME}" "${DB_PATH}"  /var/db/postgres  nullfs  rw  0  0
+  iocage fstab -a "${JAIL_NAME}" "${DB_PATH}/psql"  /var/db/postgres  nullfs  rw  0  0
 fi
 iocage fstab -a "${JAIL_NAME}" "${INCLUDES_PATH}" /mnt/includes nullfs rw 0 0
 iocage exec "${JAIL_NAME}" chown -R www:www /mnt/files
@@ -254,7 +270,7 @@ fi
 
 #####
 #
-# Configuration and Nextcloud installation  
+# Webserver Setup and Nextcloud Download  
 #
 #####
 
@@ -324,6 +340,21 @@ iocage exec "${JAIL_NAME}" sysrc caddy_env="${DNS_ENV}"
 
 iocage restart "${JAIL_NAME}"
 
+
+#####
+#
+# Nextcloud Install 
+#
+#####
+
+iocage exec "${JAIL_NAME}" touch /var/log/nextcloud.log
+iocage exec "${JAIL_NAME}" chown www /var/log/nextcloud.log
+
+# Skip generation of config and database for reinstall (this already exists when doing a reinstall)
+if [ "${REINSTALL}" == "true" ]; then
+	echo "Reinstall detected, skipping generaion of new config and database"
+else
+
 # Secure database, set root password, create Nextcloud DB, user, and password
 if [ "${DATABASE}" = "mariadb" ]; then
   iocage exec "${JAIL_NAME}" mysql -u root -e "CREATE DATABASE nextcloud;"
@@ -355,8 +386,7 @@ iocage exec "${JAIL_NAME}" echo "Nextcloud database password is ${DB_PASSWORD}" 
 iocage exec "${JAIL_NAME}" echo "Nextcloud Administrator password is ${ADMIN_PASSWORD}" >> /root/${JAIL_NAME}_db_password.txt
 
 # CLI installation and configuration of Nextcloud
-iocage exec "${JAIL_NAME}" touch /var/log/nextcloud.log
-iocage exec "${JAIL_NAME}" chown www /var/log/nextcloud.log
+
 if [ "${DATABASE}" = "mariadb" ]; then
   iocage exec "${JAIL_NAME}" su -m www -c "php /usr/local/www/nextcloud/occ maintenance:install --database=\"mysql\" --database-name=\"nextcloud\" --database-user=\"nextcloud\" --database-pass=\"${DB_PASSWORD}\" --database-host=\"localhost:/tmp/mysql.sock\" --admin-user=\"admin\" --admin-pass=\"${ADMIN_PASSWORD}\" --data-dir=\"/mnt/files\""
   iocage exec "${JAIL_NAME}" su -m www -c "php /usr/local/www/nextcloud/occ config:system:set mysql.utf8mb4 --type boolean --value=\"true\""
@@ -389,28 +419,43 @@ iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ app:en
 iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ encryption:enable'
 iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ encryption:disable'
 iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ background:cron'
+fi
+
 iocage exec "${JAIL_NAME}" su -m www -c 'php -f /usr/local/www/nextcloud/cron.php'
 iocage exec "${JAIL_NAME}" crontab -u www /mnt/includes/www-crontab
 
 # Don't need /mnt/includes any more, so unmount it
 iocage fstab -r "${JAIL_NAME}" "${INCLUDES_PATH}" /mnt/includes nullfs rw 0 0
 
+#####
+#
+# Output results to console
+#
+#####
+
 # Done!
 echo "Installation complete!"
 if [ $NO_CERT -eq 1 ]; then
-  echo "Using your web browser, go to http://${HOST_NAME} to log in"
+  echo "Using your web browser, go to http://${nextcloud_host_name} to log in"
 else
-  echo "Using your web browser, go to https://${HOST_NAME} to log in"
+  echo "Using your web browser, go to https://${nextcloud_host_name} to log in"
 fi
-echo "Default user is admin, password is ${ADMIN_PASSWORD}"
-echo ""
-echo "Database Information"
-echo "--------------------"
-echo "Database user = nextcloud"
-echo "Database password = ${DB_PASSWORD}"
-echo "The ${DB_NAME} root password is ${DB_ROOT_PASSWORD}"
-echo ""
-echo "All passwords are saved in /root/${JAIL_NAME}_db_password.txt"
+
+if [ "${REINSTALL}" == "true" ]; then
+	echo "You did a reinstall, please use your old database and account credentials"
+else
+
+	echo "Default user is admin, password is ${ADMIN_PASSWORD}"
+	echo ""
+	echo "Database Information"
+	echo "--------------------"
+	echo "Database user = nextcloud"
+	echo "Database password = ${DB_PASSWORD}"
+	echo "The ${DB_NAME} root password is ${DB_ROOT_PASSWORD}"
+	echo ""
+	echo "All passwords are saved in /root/${JAIL_NAME}_db_password.txt"
+fi
+
 echo ""
 if [ $STANDALONE_CERT -eq 1 ] || [ $DNS_CERT -eq 1 ]; then
   echo "You have obtained your Let's Encrypt certificate using the staging server."
@@ -429,3 +474,4 @@ elif [ $SELFSIGNED_CERT -eq 1 ]; then
   echo "/usr/local/etc/pki/tls/certs/fullchain.pem"
   echo ""
 fi
+

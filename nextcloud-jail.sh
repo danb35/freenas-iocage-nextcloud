@@ -27,6 +27,7 @@ DATABASE="mariadb"
 DB_PATH=""
 FILES_PATH=""
 PORTS_PATH=""
+CONFIG_PATH=""
 STANDALONE_CERT=0
 SELFSIGNED_CERT=0
 DNS_CERT=0
@@ -113,12 +114,15 @@ if [ $DNS_CERT -eq 1 ] ; then
   DNS_SETTING="dns ${DNS_PLUGIN}"
 fi
 
-# If DB_PATH, FILES_PATH, and PORTS_PATH weren't set in nextcloud-config, set them
+# If DB_PATH, FILES_PATH, CONFIG_PATH and PORTS_PATH weren't set in nextcloud-config, set them
 if [ -z "${DB_PATH}" ]; then
-  DB_PATH="${POOL_PATH}"/db
+  DB_PATH="${POOL_PATH}"/nextcloud/db
 fi
 if [ -z "${FILES_PATH}" ]; then
-  FILES_PATH="${POOL_PATH}"/files
+  FILES_PATH="${POOL_PATH}"/nextcloud/files
+fi
+if [ -z "${CONFIG_PATH}" ]; then
+  FILES_PATH="${POOL_PATH}"/nextcloud/config
 fi
 if [ -z "${PORTS_PATH}" ]; then
   PORTS_PATH="${POOL_PATH}"/portsnap
@@ -126,13 +130,13 @@ fi
 
 # Sanity check DB_PATH, FILES_PATH, and PORTS_PATH -- they all have to be different,
 # and can't be the same as POOL_PATH
-if [ "${DB_PATH}" = "${FILES_PATH}" ] || [ "${FILES_PATH}" = "${PORTS_PATH}" ] || [ "${PORTS_PATH}" = "${DB_PATH}" ]
+if [ "${DB_PATH}" = "${FILES_PATH}" ] || [ "${FILES_PATH}" = "${PORTS_PATH}" ] || [ "${PORTS_PATH}" = "${DB_PATH}" ] || [ "${CONFIG_PATH}" = "${FILES_PATH}" ] || [ "${CONFIG_PATH}" = "${PORTS_PATH}" ] || [ "${CONFIG_PATH}" = "${DB_PATH}" ]
 then
-  echo "DB_PATH, FILES_PATH, and PORTS_PATH must all be different!"
+  echo "DB_PATH, FILES_PATH, CONFIG_PATH and PORTS_PATH must all be different!"
   exit 1
 fi
 
-if [ "${DB_PATH}" = "${POOL_PATH}" ] || [ "${FILES_PATH}" = "${POOL_PATH}" ] || [ "${PORTS_PATH}" = "${POOL_PATH}" ]
+if [ "${DB_PATH}" = "${POOL_PATH}" ] || [ "${FILES_PATH}" = "${POOL_PATH}" ] || [ "${PORTS_PATH}" = "${POOL_PATH}" ] || [ "${CONFIG_PATH}" = "${POOL_PATH}" ]
 then
   echo "DB_PATH, FILES_PATH, and PORTS_PATH must all be different"
   echo "from POOL_PATH!"
@@ -197,7 +201,7 @@ elif [ "${DATABASE}" = "pgsql" ]; then
   iocage exec "${JAIL_NAME}" mkdir -p /var/db/postgres
 fi
 iocage exec "${JAIL_NAME}" mkdir -p /mnt/includes
-iocage exec "${JAIL_NAME}" mkdir -p /usr/local/www
+iocage exec "${JAIL_NAME}" mkdir -p /usr/local/www/nextcloud/config
 mkdir -p /mnt/iocage/jails/${JAIL_NAME}/root/var/db/portsnap
 mkdir -p /mnt/iocage/jails/${JAIL_NAME}/root/mnt/files
 mkdir -p /mnt/iocage/jails/${JAIL_NAME}/root/mnt/includes
@@ -205,6 +209,7 @@ mkdir -p /mnt/iocage/jails/${JAIL_NAME}/root/usr/ports
 iocage fstab -a "${JAIL_NAME}" "${PORTS_PATH}"/ports /usr/ports nullfs rw 0 0
 iocage fstab -a "${JAIL_NAME}" "${PORTS_PATH}"/db /var/db/portsnap nullfs rw 0 0
 iocage fstab -a "${JAIL_NAME}" "${FILES_PATH}" /mnt/files nullfs rw 0 0
+iocage fstab -a "${JAIL_NAME}" "${CONFIG_PATH}" /usr/local/www/nextcloud/config nullfs rw 0 0
 if [ "${DATABASE}" = "mariadb" ]; then
   mkdir -p /mnt/iocage/jails/${JAIL_NAME}/root/var/db/mysql
   iocage fstab -a "${JAIL_NAME}" "${DB_PATH}"  /var/db/mysql  nullfs  rw  0  0

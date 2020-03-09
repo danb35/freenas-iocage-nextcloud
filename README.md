@@ -24,8 +24,8 @@ This script works best when your installation is able to obtain a certificate fr
 * Sign up for a free account with Cloudflare, and activate it for free DNS service only on your domain.
 * Tell Freenom to use Cloudflare for DNS for your domain.
 * Either
- * Set up your dynamic DNS client to update Cloudflare directly, or
- * Sign up for a free account with DNS-O-Matic, and configure it to update your Cloudflare DNS
+  * Set up your dynamic DNS client to update Cloudflare directly, or
+  * Sign up for a free account with DNS-O-Matic, and configure it to update your Cloudflare DNS
 * Set up this script to do DNS validation, tell it to use the cloudflare plugin, and give it your email address and Global API key.
 
 If you aren't able or willing to obtain a certificate from Let's Encrypt, this script also supports configuring Caddy with a self-signed certificate, or with no certificate (and thus no HTTPS) at all.

@@ -8,6 +8,12 @@ if ! [ $(id -u) = 0 ]; then
    exit 1
 fi
 
+#####
+#
+# General configuration
+#
+#####
+
 # Initialize defaults
 JAIL_IP=""
 DEFAULT_GW_IP=""
@@ -21,6 +27,7 @@ DATABASE="mariadb"
 DB_PATH=""
 FILES_PATH=""
 PORTS_PATH=""
+CONFIG_PATH=""
 STANDALONE_CERT=0
 SELFSIGNED_CERT=0
 DNS_CERT=0
@@ -32,7 +39,7 @@ RELEASE="11.3-RELEASE"
 SCRIPT=$(readlink -f "$0")
 SCRIPTPATH=$(dirname "${SCRIPT}")
 . "${SCRIPTPATH}"/nextcloud-config
-CONFIGS_PATH="${SCRIPTPATH}"/configs
+INCLUDES_PATH="${SCRIPTPATH}"/includes
 DB_ROOT_PASSWORD=$(openssl rand -base64 16)
 DB_PASSWORD=$(openssl rand -base64 16)
 if [ "${DATABASE}" = "mariadb" ]; then
@@ -44,11 +51,19 @@ fi
 ADMIN_PASSWORD=$(openssl rand -base64 12)
 #RELEASE=$(freebsd-version | sed "s/STABLE/RELEASE/g" | sed "s/-p[0-9]*//")
 
+
+
 # Check for nextcloud-config and set configuration
 if ! [ -e "${SCRIPTPATH}"/nextcloud-config ]; then
   echo "${SCRIPTPATH}/nextcloud-config must exist."
   exit 1
 fi
+
+#####
+#
+# Input/Config Sanity checks
+#
+#####
 
 # Check that necessary variables were set by nextcloud-config
 if [ -z "${JAIL_IP}" ]; then
@@ -99,12 +114,15 @@ if [ $DNS_CERT -eq 1 ] ; then
   DNS_SETTING="dns ${DNS_PLUGIN}"
 fi
 
-# If DB_PATH, FILES_PATH, and PORTS_PATH weren't set in nextcloud-config, set them
+# If DB_PATH, FILES_PATH, CONFIG_PATH and PORTS_PATH weren't set in nextcloud-config, set them
 if [ -z "${DB_PATH}" ]; then
-  DB_PATH="${POOL_PATH}"/db
+  DB_PATH="${POOL_PATH}"/nextcloud/db
 fi
 if [ -z "${FILES_PATH}" ]; then
-  FILES_PATH="${POOL_PATH}"/files
+  FILES_PATH="${POOL_PATH}"/nextcloud/files
+fi
+if [ -z "${CONFIG_PATH}" ]; then
+  FILES_PATH="${POOL_PATH}"/nextcloud/config
 fi
 if [ -z "${PORTS_PATH}" ]; then
   PORTS_PATH="${POOL_PATH}"/portsnap
@@ -112,13 +130,13 @@ fi
 
 # Sanity check DB_PATH, FILES_PATH, and PORTS_PATH -- they all have to be different,
 # and can't be the same as POOL_PATH
-if [ "${DB_PATH}" = "${FILES_PATH}" ] || [ "${FILES_PATH}" = "${PORTS_PATH}" ] || [ "${PORTS_PATH}" = "${DB_PATH}" ]
+if [ "${DB_PATH}" = "${FILES_PATH}" ] || [ "${FILES_PATH}" = "${PORTS_PATH}" ] || [ "${PORTS_PATH}" = "${DB_PATH}" ] || [ "${CONFIG_PATH}" = "${FILES_PATH}" ] || [ "${CONFIG_PATH}" = "${PORTS_PATH}" ] || [ "${CONFIG_PATH}" = "${DB_PATH}" ]
 then
-  echo "DB_PATH, FILES_PATH, and PORTS_PATH must all be different!"
+  echo "DB_PATH, FILES_PATH, CONFIG_PATH and PORTS_PATH must all be different!"
   exit 1
 fi
 
-if [ "${DB_PATH}" = "${POOL_PATH}" ] || [ "${FILES_PATH}" = "${POOL_PATH}" ] || [ "${PORTS_PATH}" = "${POOL_PATH}" ]
+if [ "${DB_PATH}" = "${POOL_PATH}" ] || [ "${FILES_PATH}" = "${POOL_PATH}" ] || [ "${PORTS_PATH}" = "${POOL_PATH}" ] || [ "${CONFIG_PATH}" = "${POOL_PATH}" ]
 then
   echo "DB_PATH, FILES_PATH, and PORTS_PATH must all be different"
   echo "from POOL_PATH!"
@@ -132,9 +150,15 @@ if [ "$(ls -A "${DB_PATH}")" ]; then
   exit 1
 fi
 
-# Create the jail, pre-installing needed packages
+#####
+#
+# Jail Creation
+#
+#####
+
+# List packages to be auto-installed after jail creation
 cat <<__EOF__ >/tmp/pkg.json
-{
+	{
   "pkgs":[
   "nano","sudo","redis","php73-ctype","gnupg","bash",
   "php73-dom","php73-gd","php73-iconv","php73-json","php73-mbstring",
@@ -149,6 +173,7 @@ cat <<__EOF__ >/tmp/pkg.json
 }
 __EOF__
 
+# Create the jail and install previously listed packages
 if ! iocage create --name "${JAIL_NAME}" -p /tmp/pkg.json -r "${RELEASE}" ip4_addr="${INTERFACE}|${JAIL_IP}/24" defaultrouter="${DEFAULT_GW_IP}" boot="on" host_hostname="${JAIL_NAME}" vnet="${VNET}"
 then
 	echo "Failed to create jail"
@@ -156,11 +181,13 @@ then
 fi
 rm /tmp/pkg.json
 
-if [ "${DATABASE}" = "mariadb" ]; then
-  iocage exec "${JAIL_NAME}" pkg install -qy mariadb103-server php73-pdo_mysql php73-mysqli
-elif [ "${DATABASE}" = "pgsql" ]; then
-  iocage exec "${JAIL_NAME}" pkg install -qy postgresql10-server php73-pgsql php73-pdo_pgsql
-fi
+#####
+#
+# Folder Creation and Mounting
+#
+#####
+
+
 mkdir -p "${DB_PATH}"/
 chown -R 88:88 "${DB_PATH}"/
 mkdir -p "${FILES_PATH}"
@@ -173,15 +200,16 @@ if [ "${DATABASE}" = "mariadb" ]; then
 elif [ "${DATABASE}" = "pgsql" ]; then
   iocage exec "${JAIL_NAME}" mkdir -p /var/db/postgres
 fi
-iocage exec "${JAIL_NAME}" mkdir -p /mnt/configs
-iocage exec "${JAIL_NAME}" mkdir -p /usr/local/www
+iocage exec "${JAIL_NAME}" mkdir -p /mnt/includes
+iocage exec "${JAIL_NAME}" mkdir -p /usr/local/www/nextcloud/config
 mkdir -p /mnt/iocage/jails/${JAIL_NAME}/root/var/db/portsnap
 mkdir -p /mnt/iocage/jails/${JAIL_NAME}/root/mnt/files
-mkdir -p /mnt/iocage/jails/${JAIL_NAME}/root/mnt/configs
+mkdir -p /mnt/iocage/jails/${JAIL_NAME}/root/mnt/includes
 mkdir -p /mnt/iocage/jails/${JAIL_NAME}/root/usr/ports
 iocage fstab -a "${JAIL_NAME}" "${PORTS_PATH}"/ports /usr/ports nullfs rw 0 0
 iocage fstab -a "${JAIL_NAME}" "${PORTS_PATH}"/db /var/db/portsnap nullfs rw 0 0
 iocage fstab -a "${JAIL_NAME}" "${FILES_PATH}" /mnt/files nullfs rw 0 0
+iocage fstab -a "${JAIL_NAME}" "${CONFIG_PATH}" /usr/local/www/nextcloud/config nullfs rw 0 0
 if [ "${DATABASE}" = "mariadb" ]; then
   mkdir -p /mnt/iocage/jails/${JAIL_NAME}/root/var/db/mysql
   iocage fstab -a "${JAIL_NAME}" "${DB_PATH}"  /var/db/mysql  nullfs  rw  0  0
@@ -189,16 +217,40 @@ elif [ "${DATABASE}" = "pgsql" ]; then
   mkdir -p /mnt/iocage/jails/${JAIL_NAME}/root/var/db/postgres
   iocage fstab -a "${JAIL_NAME}" "${DB_PATH}"  /var/db/postgres  nullfs  rw  0  0
 fi
-iocage fstab -a "${JAIL_NAME}" "${CONFIGS_PATH}" /mnt/configs nullfs rw 0 0
+iocage fstab -a "${JAIL_NAME}" "${INCLUDES_PATH}" /mnt/includes nullfs rw 0 0
 iocage exec "${JAIL_NAME}" chown -R www:www /mnt/files
 iocage exec "${JAIL_NAME}" chmod -R 770 /mnt/files
+
+
+#####
+#
+# Additional Dependency installation
+#
+#####
+
+if [ "${DATABASE}" = "mariadb" ]; then
+	iocage exec "${JAIL_NAME}" pkg install -qy mariadb103-server php73-pdo_mysql php73-mysqli
+elif [ "${DATABASE}" = "pgsql" ]; then
+  iocage exec "${JAIL_NAME}" pkg install -qy postgresql10-server php73-pgsql php73-pdo_pgsql
+fi
+
 iocage exec "${JAIL_NAME}" "if [ -z /usr/ports ]; then portsnap fetch extract; else portsnap auto; fi"
+
+iocage exec "${JAIL_NAME}" sh -c "make -C /usr/ports/www/php73-opcache clean install BATCH=yes"
+iocage exec "${JAIL_NAME}" sh -c "make -C /usr/ports/devel/php73-pcntl clean install BATCH=yes"
+
 fetch -o /tmp https://getcaddy.com
 if ! iocage exec "${JAIL_NAME}" bash -s personal "${DL_FLAGS}" < /tmp/getcaddy.com
 then
 	echo "Failed to download/install Caddy"
 	exit 1
 fi
+
+#####
+#
+# Configuration and Nextcloud installation  
+#
+#####
 
 FILE="latest-18.tar.bz2"
 if ! iocage exec "${JAIL_NAME}" fetch -o /tmp https://download.nextcloud.com/server/releases/"${FILE}" https://download.nextcloud.com/server/releases/"${FILE}".asc https://nextcloud.com/nextcloud.asc
@@ -222,39 +274,38 @@ elif [ "${DATABASE}" = "pgsql" ]; then
 fi
 iocage exec "${JAIL_NAME}" sysrc redis_enable="YES"
 iocage exec "${JAIL_NAME}" sysrc php_fpm_enable="YES"
-iocage exec "${JAIL_NAME}" sh -c "make -C /usr/ports/www/php73-opcache clean install BATCH=yes"
-iocage exec "${JAIL_NAME}" sh -c "make -C /usr/ports/devel/php73-pcntl clean install BATCH=yes"
+
 
 # Generate and install self-signed cert, if necessary
 if [ $SELFSIGNED_CERT -eq 1 ]; then
   iocage exec "${JAIL_NAME}" mkdir -p /usr/local/etc/pki/tls/private
   iocage exec "${JAIL_NAME}" mkdir -p /usr/local/etc/pki/tls/certs
-  openssl req -new -newkey rsa:4096 -days 3650 -nodes -x509 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=${HOST_NAME}" -keyout "${CONFIGS_PATH}"/privkey.pem -out "${CONFIGS_PATH}"/fullchain.pem
-  iocage exec "${JAIL_NAME}" cp /mnt/configs/privkey.pem /usr/local/etc/pki/tls/private/privkey.pem
-  iocage exec "${JAIL_NAME}" cp /mnt/configs/fullchain.pem /usr/local/etc/pki/tls/certs/fullchain.pem
+  openssl req -new -newkey rsa:4096 -days 3650 -nodes -x509 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=${HOST_NAME}" -keyout "${INCLUDES_PATH}"/privkey.pem -out "${INCLUDES_PATH}"/fullchain.pem
+  iocage exec "${JAIL_NAME}" cp /mnt/includes/privkey.pem /usr/local/etc/pki/tls/private/privkey.pem
+  iocage exec "${JAIL_NAME}" cp /mnt/includes/fullchain.pem /usr/local/etc/pki/tls/certs/fullchain.pem
 fi
 
 # Copy and edit pre-written config files
-iocage exec "${JAIL_NAME}" cp -f /mnt/configs/php.ini /usr/local/etc/php.ini
-iocage exec "${JAIL_NAME}" cp -f /mnt/configs/redis.conf /usr/local/etc/redis.conf
-iocage exec "${JAIL_NAME}" cp -f /mnt/configs/www.conf /usr/local/etc/php-fpm.d/
+iocage exec "${JAIL_NAME}" cp -f /mnt/includes/php.ini /usr/local/etc/php.ini
+iocage exec "${JAIL_NAME}" cp -f /mnt/includes/redis.conf /usr/local/etc/redis.conf
+iocage exec "${JAIL_NAME}" cp -f /mnt/includes/www.conf /usr/local/etc/php-fpm.d/
 if [ $STANDALONE_CERT -eq 1 ] || [ $DNS_CERT -eq 1 ]; then
-  iocage exec "${JAIL_NAME}" cp -f /mnt/configs/remove-staging.sh /root/
+  iocage exec "${JAIL_NAME}" cp -f /mnt/includes/remove-staging.sh /root/
 fi
 if [ $NO_CERT -eq 1 ]; then
   echo "Copying Caddyfile for no SSL"
-  iocage exec "${JAIL_NAME}" cp -f /mnt/configs/Caddyfile-nossl /usr/local/www/Caddyfile
+  iocage exec "${JAIL_NAME}" cp -f /mnt/includes/Caddyfile-nossl /usr/local/www/Caddyfile
 elif [ $SELFSIGNED_CERT -eq 1 ]; then
   echo "Copying Caddyfile for self-signed cert"
-  iocage exec "${JAIL_NAME}" cp -f /mnt/configs/Caddyfile-selfsigned /usr/local/www/Caddyfile
+  iocage exec "${JAIL_NAME}" cp -f /mnt/includes/Caddyfile-selfsigned /usr/local/www/Caddyfile
 else
   echo "Copying Caddyfile for Let's Encrypt cert"
-  iocage exec "${JAIL_NAME}" cp -f /mnt/configs/Caddyfile /usr/local/www/
+  iocage exec "${JAIL_NAME}" cp -f /mnt/includes/Caddyfile /usr/local/www/
 fi
-iocage exec "${JAIL_NAME}" cp -f /mnt/configs/caddy /usr/local/etc/rc.d/
+iocage exec "${JAIL_NAME}" cp -f /mnt/includes/caddy /usr/local/etc/rc.d/
 
 if [ "${DATABASE}" = "mariadb" ]; then
-  iocage exec "${JAIL_NAME}" cp -f /mnt/configs/my-system.cnf /var/db/mysql/my.cnf
+  iocage exec "${JAIL_NAME}" cp -f /mnt/includes/my-system.cnf /var/db/mysql/my.cnf
 fi
 iocage exec "${JAIL_NAME}" sed -i '' "s/yourhostnamehere/${HOST_NAME}/" /usr/local/www/Caddyfile
 iocage exec "${JAIL_NAME}" sed -i '' "s/DNS-PLACEHOLDER/${DNS_SETTING}/" /usr/local/www/Caddyfile
@@ -277,10 +328,10 @@ if [ "${DATABASE}" = "mariadb" ]; then
   iocage exec "${JAIL_NAME}" mysql -u root -e "DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';"
   iocage exec "${JAIL_NAME}" mysql -u root -e "UPDATE mysql.user SET Password=PASSWORD('${DB_ROOT_PASSWORD}') WHERE User='root';"
   iocage exec "${JAIL_NAME}" mysqladmin reload
-  iocage exec "${JAIL_NAME}" cp -f /mnt/configs/my.cnf /root/.my.cnf
+  iocage exec "${JAIL_NAME}" cp -f /mnt/includes/my.cnf /root/.my.cnf
   iocage exec "${JAIL_NAME}" sed -i '' "s|mypassword|${DB_ROOT_PASSWORD}|" /root/.my.cnf
 elif [ "${DATABASE}" = "pgsql" ]; then
-  iocage exec "${JAIL_NAME}" cp -f /mnt/configs/pgpass /root/.pgpass
+  iocage exec "${JAIL_NAME}" cp -f /mnt/includes/pgpass /root/.pgpass
   iocage exec "${JAIL_NAME}" chmod 600 /root/.pgpass
   iocage exec "${JAIL_NAME}" chown postgres /var/db/postgres/
   iocage exec "${JAIL_NAME}" /usr/local/etc/rc.d/postgresql initdb
@@ -331,10 +382,10 @@ iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ encryp
 iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ encryption:disable'
 iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ background:cron'
 iocage exec "${JAIL_NAME}" su -m www -c 'php -f /usr/local/www/nextcloud/cron.php'
-iocage exec "${JAIL_NAME}" crontab -u www /mnt/configs/www-crontab
+iocage exec "${JAIL_NAME}" crontab -u www /mnt/includes/www-crontab
 
-# Don't need /mnt/configs any more, so unmount it
-iocage fstab -r "${JAIL_NAME}" "${CONFIGS_PATH}" /mnt/configs nullfs rw 0 0
+# Don't need /mnt/includes any more, so unmount it
+iocage fstab -r "${JAIL_NAME}" "${INCLUDES_PATH}" /mnt/includes nullfs rw 0 0
 
 # Done!
 echo "Installation complete!"

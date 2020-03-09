@@ -59,7 +59,7 @@ Many of the options are self-explanatory, and all should be adjusted to suit you
 In addition, there are some other options which have sensible defaults, but can be adjusted if needed.  These are:
 
 * JAIL_NAME: The name of the jail, defaults to "nextcloud"
-* DB_PATH, FILES_PATH, CONFIG_PATH and PORTS_PATH: These are the paths to your database files, your data files, nextcloud config (www/nextcloud/config) files and the FreeBSD Ports collection.  They default to $POOL_PATH/nextcloud/db, $POOL_PATH/nextcloud/files, $POOL_PATH/nextcloud/config and $POOL_PATH/portsnap, respectively.
+* DB_PATH, FILES_PATH, CONFIG_PATH, THEMES_PATH and PORTS_PATH: These are the paths to your database files, your data files, nextcloud config files, theme files and the FreeBSD Ports collection.  They default to $POOL_PATH/nextcloud/db, $POOL_PATH/nextcloud/files, $POOL_PATH/nextcloud/config, $POOL_PATH/nextcloud/themes and $POOL_PATH/portsnap, respectively.
 * DATABASE: Which database management system to use.  Default is "mariadb", but can be set to "pgsql" if you prefer to use PostgreSQL.
 * INTERFACE: The network interface to use for the jail.  Defaults to `vnet0`.
 * VNET: Whether to use the iocage virtual network stack.  Defaults to `on`.

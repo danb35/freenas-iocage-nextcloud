@@ -31,7 +31,20 @@ This script works best when your installation is able to obtain a certificate fr
 If you aren't able or willing to obtain a certificate from Let's Encrypt, this script also supports configuring Caddy with a self-signed certificate, or with no certificate (and thus no HTTPS) at all.
 
 ### Prerequisites (Other)
-Although not required, it's recommended to create two datasets on your main storage pool: one named `files`, which will store the Nextcloud user data; and one called `db`, which will store the SQL database.  For optimal performance, set the record size of the `db` dataset to 16 KB (under Advanced Settings in the FreeNAS web GUI).  It's also recommended to cache only metadata on the `db` dataset; you can do this by running `zfs set primarycache=metadata poolname/db`.
+There are Three options when it comes to datasets and folder structure:
+- 1 Dataset with subfolders
+- 1 Dataset with 4 sub-datasets
+- 4 Datasets
+
+Although not required, it's recommended to create 1 Dataset with 4 sub-datasets on your main storage pool
+- 1 Dataset named `nextcloud`
+Under which you create 4 other datasets
+- one named `files`, which will store the Nextcloud user data.
+- one named `config`, which will store the Nextcloud configuration.
+- one named `themes`, which will store the Nextcloud themes.
+- one called `db`, which will store the SQL database.  For optimal performance, set the record size of the `db` dataset to 16 KB (under Advanced Settings in the FreeNAS web GUI).  It's also recommended to cache only metadata on the `db` dataset; you can do this by running `zfs set primarycache=metadata poolname/db`.
+
+If you use 1 dataset with subfolders it's recomended to use a similair structure.
 
 ### Installation
 Download the repository to a convenient directory on your FreeNAS system by running `git clone https://github.com/danb35/freenas-iocage-nextcloud`.  Then change into the new directory and create a file called `nextcloud-config`.  It should look like this:

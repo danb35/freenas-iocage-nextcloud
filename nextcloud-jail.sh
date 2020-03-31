@@ -35,6 +35,7 @@ NO_CERT=0
 DL_FLAGS=""
 DNS_SETTING=""
 RELEASE="11.3-RELEASE"
+JAILS_MOUNT=$(zfs get -H -o value mountpoint $(iocage get -p)/iocage)
 
 SCRIPT=$(readlink -f "$0")
 SCRIPTPATH=$(dirname "${SCRIPT}")
@@ -202,19 +203,19 @@ elif [ "${DATABASE}" = "pgsql" ]; then
 fi
 iocage exec "${JAIL_NAME}" mkdir -p /mnt/includes
 iocage exec "${JAIL_NAME}" mkdir -p /usr/local/www/nextcloud/config
-mkdir -p /mnt/iocage/jails/${JAIL_NAME}/root/var/db/portsnap
-mkdir -p /mnt/iocage/jails/${JAIL_NAME}/root/mnt/files
-mkdir -p /mnt/iocage/jails/${JAIL_NAME}/root/mnt/includes
-mkdir -p /mnt/iocage/jails/${JAIL_NAME}/root/usr/ports
+mkdir -p "${JAILS_MOUNT}"/jails/${JAIL_NAME}/root/var/db/portsnap
+mkdir -p "${JAILS_MOUNT}"/jails/${JAIL_NAME}/root/mnt/files
+mkdir -p "${JAILS_MOUNT}"/jails/${JAIL_NAME}/root/mnt/includes
+mkdir -p "${JAILS_MOUNT}"/jails/${JAIL_NAME}/root/usr/ports
 iocage fstab -a "${JAIL_NAME}" "${PORTS_PATH}"/ports /usr/ports nullfs rw 0 0
 iocage fstab -a "${JAIL_NAME}" "${PORTS_PATH}"/db /var/db/portsnap nullfs rw 0 0
 iocage fstab -a "${JAIL_NAME}" "${FILES_PATH}" /mnt/files nullfs rw 0 0
 iocage fstab -a "${JAIL_NAME}" "${CONFIG_PATH}" /usr/local/www/nextcloud/config nullfs rw 0 0
 if [ "${DATABASE}" = "mariadb" ]; then
-  mkdir -p /mnt/iocage/jails/${JAIL_NAME}/root/var/db/mysql
+  mkdir -p "${JAILS_MOUNT}"/jails/${JAIL_NAME}/root/var/db/mysql
   iocage fstab -a "${JAIL_NAME}" "${DB_PATH}"  /var/db/mysql  nullfs  rw  0  0
 elif [ "${DATABASE}" = "pgsql" ]; then
-  mkdir -p /mnt/iocage/jails/${JAIL_NAME}/root/var/db/postgres
+  mkdir -p "${JAILS_MOUNT}"/jails/${JAIL_NAME}/root/var/db/postgres
   iocage fstab -a "${JAIL_NAME}" "${DB_PATH}"  /var/db/postgres  nullfs  rw  0  0
 fi
 iocage fstab -a "${JAIL_NAME}" "${INCLUDES_PATH}" /mnt/includes nullfs rw 0 0

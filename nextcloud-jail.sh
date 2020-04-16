@@ -168,7 +168,7 @@ cat <<__EOF__ >/tmp/pkg.json
   "php73-session","php73-wddx","php73-xsl","php73-filter","php73-pecl-APCu",
   "php73-curl","php73-fileinfo","php73-bz2","php73-intl","php73-openssl",
   "php73-ldap","php73-ftp","php73-imap","php73-exif","php73-gmp",
-  "php73-pecl-memcache","php73-pecl-imagick","bash","perl5",
+  "php73-pecl-memcache","php73-pecl-imagick","php73-pecl-smbclient","bash","perl5",
   "p5-Locale-gettext","help2man","texinfo","m4","autoconf"
   ]
 }

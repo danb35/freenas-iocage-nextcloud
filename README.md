@@ -64,9 +64,9 @@ In addition, there are some other options which have sensible defaults, but can 
 * INTERFACE: The network interface to use for the jail.  Defaults to `vnet0`.
 * VNET: Whether to use the iocage virtual network stack.  Defaults to `on`.
 
-If you're going to open ports 80 and 443 from the outside world to your jail, do so before running the script, and set STANDALONE_CERT to 1.  If not, but you use a DNS provider that's supported by Caddy, set DNS_CERT to 1.  If neither of these is true, you won't be able to use this script without modification.
+If you're going to open ports 80 and 443 from the outside world to your jail, do so before running the script, and set STANDALONE_CERT to 1.  If not, but you use a DNS provider that's supported by Caddy, set DNS_CERT to 1.  If neither of these is true, use either NO_CERT (if you want to run without SSL at all) or SELFSIGNED_CERT (to generate a self-signed certificate--this is also the setting to use if you want to use a certificate from another source).
 
-It's also helpful if HOST_NAME resolves to your jail from **inside** your network.  You'll probably need to configure this on your router.  If it doesn't, you'll still be able to reach your Nextcloud installation via the jail's IP address, but you'll get certificate errors that way.
+Also, HOST_NAME needs to resolve to your jail from **inside** your network.  You'll probably need to configure this on your router.  If you're unable to do so, you can edit the hosts file on your client computers to achieve this result.
 
 ### Execution
 Once you've downloaded the script and prepared the configuration file, run this script (`./nextcloud-jail.sh`).  The script will run for several minutes.  When it finishes, your jail will be created, Nextcloud will be installed and configured, and you'll be shown the randomly-generated password for the default user ("admin").  You can then log in and create users, add data, and generally do whatever else you like.

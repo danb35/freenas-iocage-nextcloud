@@ -123,7 +123,7 @@ if [ -z "${FILES_PATH}" ]; then
   FILES_PATH="${POOL_PATH}"/nextcloud/files
 fi
 if [ -z "${CONFIG_PATH}" ]; then
-  FILES_PATH="${POOL_PATH}"/nextcloud/config
+  CONFIG_PATH="${POOL_PATH}"/nextcloud/config
 fi
 if [ -z "${PORTS_PATH}" ]; then
   PORTS_PATH="${POOL_PATH}"/portsnap

@@ -124,6 +124,9 @@ if [ -z "${FILES_PATH}" ]; then
 fi
 if [ -z "${CONFIG_PATH}" ]; then
   CONFIG_PATH="${POOL_PATH}"/nextcloud/config
+  if [ -z "${CONFIG_PATH}" ]; then
+     mkdir -p ${CONFIG_PATH}
+  fi
 fi
 if [ -z "${PORTS_PATH}" ]; then
   PORTS_PATH="${POOL_PATH}"/portsnap
@@ -343,6 +346,17 @@ elif [ "${DATABASE}" = "pgsql" ]; then
   iocage exec "${JAIL_NAME}" psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE nextcloud TO nextcloud;"
   iocage exec "${JAIL_NAME}" psql -U postgres -c "SELECT pg_reload_conf();"
 fi
+
+#
+# Backup and Restore
+iocage exec "${JAIL_NAME}" mkdir -p /mnt/NextcloudBackups/
+mkdir -p "${POOL_PATH}"/NextcloudBackups/
+iocage fstab -a "${JAIL_NAME}" "${POOL_PATH}"/NextcloudBackups/ /mnt/NextcloudBackups/ nullfs rw 0 0
+iocage exec "${JAIL_NAME}" cp -f /mnt/includes/NextcloudBR-config /usr
+iocage exec "${JAIL_NAME}" cp -f /mnt/includes/NextcloudBR.sh /usr
+iocage exec ${JAIL_NAME} chmod 600 /usr/NextcloudBR-config
+iocage exec ${JAIL_NAME} sed -i '' "s|mydbpassword|${DB_PASSWORD}|" /usr/NextcloudBR-config
+echo "Backup and Restore scripts copied to /usr directory in the jail ${JAIL_NAME}"
 
 # Save passwords for later reference
 iocage exec "${JAIL_NAME}" echo "${DB_NAME} root password is ${DB_ROOT_PASSWORD}" > /root/${JAIL_NAME}_db_password.txt

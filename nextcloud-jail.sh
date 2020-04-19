@@ -124,9 +124,6 @@ if [ -z "${FILES_PATH}" ]; then
 fi
 if [ -z "${CONFIG_PATH}" ]; then
   CONFIG_PATH="${POOL_PATH}"/nextcloud/config
-  if [ -z "${CONFIG_PATH}" ]; then
-     mkdir -p ${CONFIG_PATH}
-  fi
 fi
 if [ -z "${PORTS_PATH}" ]; then
   PORTS_PATH="${POOL_PATH}"/portsnap
@@ -198,6 +195,7 @@ mkdir -p "${FILES_PATH}"
 chown -R 80:80 "${FILES_PATH}"
 mkdir -p "${PORTS_PATH}"/ports
 mkdir -p "${PORTS_PATH}"/db
+mkdir -p "${POOL_PATH}"/nextcloud/config
 iocage exec "${JAIL_NAME}" mkdir -p /mnt/files
 if [ "${DATABASE}" = "mariadb" ]; then
   iocage exec "${JAIL_NAME}" mkdir -p /var/db/mysql

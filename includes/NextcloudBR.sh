@@ -448,12 +448,6 @@ echo "Done"
 echo
 
 #
-# Disable 2 factor authentication and repair DB to fix and restore all shares
-#
-su -m www -c 'php /usr/local/www/nextcloud/occ twofactor:disable admin'
-su -m www -c 'php /usr/local/www/nextcloud/occ maintenance:repair'
-
-#
 # Reset nextcloud admin password
 #
 echo "reset admin password"

@@ -128,7 +128,7 @@ fi
 if [ -z "${PORTS_PATH}" ]; then
   PORTS_PATH="${POOL_PATH}"/portsnap
 fi
-
+echo "3"
 # Sanity check DB_PATH, FILES_PATH, and PORTS_PATH -- they all have to be different,
 # and can't be the same as POOL_PATH
 if [ "${DB_PATH}" = "${FILES_PATH}" ] || [ "${FILES_PATH}" = "${PORTS_PATH}" ] || [ "${PORTS_PATH}" = "${DB_PATH}" ] || [ "${CONFIG_PATH}" = "${FILES_PATH}" ] || [ "${CONFIG_PATH}" = "${PORTS_PATH}" ] || [ "${CONFIG_PATH}" = "${DB_PATH}" ]
@@ -136,14 +136,14 @@ then
   echo "DB_PATH, FILES_PATH, CONFIG_PATH and PORTS_PATH must all be different!"
   exit 1
 fi
-
+echo "1"
 if [ "${DB_PATH}" = "${POOL_PATH}" ] || [ "${FILES_PATH}" = "${POOL_PATH}" ] || [ "${PORTS_PATH}" = "${POOL_PATH}" ] || [ "${CONFIG_PATH}" = "${POOL_PATH}" ]
 then
   echo "DB_PATH, FILES_PATH, and PORTS_PATH must all be different"
   echo "from POOL_PATH!"
   exit 1
 fi
-
+echo "2"
 # Make sure DB_PATH is empty -- if not, MariaDB/PostgreSQL will choke
 if [ "$(ls -A "${DB_PATH}")" ]; then
   echo "${DB_PATH} is not empty!"
@@ -276,7 +276,7 @@ elif [ "${DATABASE}" = "pgsql" ]; then
 fi
 iocage exec "${JAIL_NAME}" sysrc redis_enable="YES"
 iocage exec "${JAIL_NAME}" sysrc php_fpm_enable="YES"
-
+echo "A"
 
 # Generate and install self-signed cert, if necessary
 if [ $SELFSIGNED_CERT -eq 1 ]; then
@@ -286,14 +286,15 @@ if [ $SELFSIGNED_CERT -eq 1 ]; then
   iocage exec "${JAIL_NAME}" cp /mnt/includes/privkey.pem /usr/local/etc/pki/tls/private/privkey.pem
   iocage exec "${JAIL_NAME}" cp /mnt/includes/fullchain.pem /usr/local/etc/pki/tls/certs/fullchain.pem
 fi
-
+echo "B"
 # Copy and edit pre-written config files
 iocage exec "${JAIL_NAME}" cp -f /mnt/includes/php.ini /usr/local/etc/php.ini
 iocage exec "${JAIL_NAME}" cp -f /mnt/includes/redis.conf /usr/local/etc/redis.conf
 iocage exec "${JAIL_NAME}" cp -f /mnt/includes/www.conf /usr/local/etc/php-fpm.d/
-if [ $STANDALONE_CERT -eq 1 ] || [ $DNS_CERT -eq 1 ]; then
+if [ ${STANDALONE_CERT} -eq 1 ] || [ ${DNS_CERT} -eq 1 ]; then
   iocage exec "${JAIL_NAME}" cp -f /mnt/includes/remove-staging.sh /root/
 fi
+echo "C"
 if [ $NO_CERT -eq 1 ]; then
   echo "Copying Caddyfile for no SSL"
   iocage exec "${JAIL_NAME}" cp -f /mnt/includes/Caddyfile-nossl /usr/local/www/Caddyfile
@@ -305,7 +306,7 @@ else
   iocage exec "${JAIL_NAME}" cp -f /mnt/includes/Caddyfile /usr/local/www/
 fi
 iocage exec "${JAIL_NAME}" cp -f /mnt/includes/caddy /usr/local/etc/rc.d/
-
+echo "D"
 if [ "${DATABASE}" = "mariadb" ]; then
   iocage exec "${JAIL_NAME}" cp -f /mnt/includes/my-system.cnf /var/db/mysql/my.cnf
 fi

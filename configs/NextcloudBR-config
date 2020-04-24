@@ -1,0 +1,21 @@
+# Variables
+cron=""
+backupMainDir="/mnt/NextcloudBackups" #The directory where you store the Nextcloud backups
+final="NC_"$(echo "$(sudo -u www php /usr/local/www/nextcloud/occ --version)" | sed 's/Nextcloud //')$(date +'_%F_%H%M')
+backupdir="${backupMainDir}/${final}/" # The actual directory of the current backup - this is is subdirectory of the main directory above with a timestamp
+nextcloudFileDir="/usr/local/www/nextcloud" # The directory of your Nextcloud installation (this is a directory under your web root)
+nextcloudDataDir="/mnt/files" # The directory of your Nextcloud data directory (outside the Nextcloud file directory)
+webserverServiceName="" # The service name of the web server. Used to start/stop web server (e.g. 'service <webserverServiceName> start') blank to not start/stop web server
+nextcloudDatabase="nextcloud" # Your Nextcloud database name
+dbUser="nextcloud" # Your Nextcloud database user
+dbPassword="mydbpassword" # The password of the Nextcloud database user
+databaseSystem="mariadb" # mariadb or postgresql
+webserverUser="www" # Your web server user
+maxNrOfBackups=2 # The maximum number of backups to keep (when set to 0, all backups are kept)
+
+# File names for backup files
+# If you prefer other file names, you'll also have to change the NextcloudRestore.sh script.
+fileNameBackupFileDir="nextcloud-filedir.tar.gz"
+fileNameBackupDataDir="nextcloud-datadir.tar.gz"
+fileNameBackupDb="nextcloud-db.sql"
+

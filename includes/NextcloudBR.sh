@@ -148,11 +148,11 @@ if [ "$cron" != "yes" ]; then
 fi
 echo
 
-if [ "${cron}" == "yes" ]; then
+if [ "$cron" == "yes" ]; then
     choice="B"
 fi
 echo
-if [ "${choice}" = "B" ] || [ "${choice}" = "b" ]; then
+if [ "$choice" = "B" ] || [ "$choice" = "b" ]; then
 
 
 #
@@ -268,7 +268,7 @@ echo "DONE!"
 echo "Backup created: ${backupdir}"
 exit 1
 
-elif [ "${choice}" = "R" ] || [ "{$choice}" = "r" ]; then
+elif [ "$choice" = "R" ] || [ "$choice" = "r" ]; then
 
 #
 # Pick the restore directory *don't edit this section*

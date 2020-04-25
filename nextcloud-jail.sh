@@ -440,9 +440,9 @@ iocage fstab -r "${JAIL_NAME}" "${INCLUDES_PATH}" /mnt/includes nullfs rw 0 0
 # Done!
 echo "Installation complete!"
 if [ $NO_CERT -eq 1 ]; then
-  echo "Using your web browser, go to http://${nextcloud_host_name} to log in"
+  echo "Using your web browser, go to http://${${HOST_NAME}} to log in"
 else
-  echo "Using your web browser, go to https://${nextcloud_host_name} to log in"
+  echo "Using your web browser, go to https://${${HOST_NAME}} to log in"
 fi
 
 if [ "${REINSTALL}" == "true" ]; then

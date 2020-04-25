@@ -145,14 +145,13 @@ then
   echo "DB_PATH, FILES_PATH, CONFIG_PATH and PORTS_PATH must all be different!"
   exit 1
 elif [ "${THEMES_PATH}" = "${THEMES_PATH}" ] || [ "${THEMES_PATH}" = "${PORTS_PATH}" ] || [ "${THEMES_PATH}" = "${DB_PATH}" ] || [ "${THEMES_PATH}" = "${CONFIG_PATH}" ]
-  echo "DB_PATH, FILES_PATH, CONFIG_PATH and PORTS_PATH must all be different!"
+  echo "DB_PATH, FILES_PATH, CONFIG_PATH, THEMES_PATH and PORTS_PATH must all be different!"
   exit 1
 fi
 
 if [ "${DB_PATH}" = "${POOL_PATH}" ] || [ "${FILES_PATH}" = "${POOL_PATH}" ] || [ "${PORTS_PATH}" = "${POOL_PATH}" ] || [ "${CONFIG_PATH}" = "${POOL_PATH}" ] || [ "${THEMES_PATH}" = "${POOL_PATH}" ]
 then
-  echo "DB_PATH, FILES_PATH, and PORTS_PATH must all be different"
-  echo "from POOL_PATH!"
+  echo "DB_PATH, FILES_PATH, CONFIG_PATH, THEMES_PATH and PORTS_PATH must all be different from POOL_PATH!"
   exit 1
 fi
 
@@ -231,7 +230,7 @@ iocage fstab -a "${JAIL_NAME}" "${PORTS_PATH}"/ports /usr/ports nullfs rw 0 0
 iocage fstab -a "${JAIL_NAME}" "${PORTS_PATH}"/db /var/db/portsnap nullfs rw 0 0
 iocage fstab -a "${JAIL_NAME}" "${FILES_PATH}" /mnt/files nullfs rw 0 0
 iocage fstab -a "${JAIL_NAME}" "${CONFIG_PATH}" /usr/local/www/nextcloud/config nullfs rw 0 0
-iocage fstab -a "${JAIL_NAME}" "${CONFIG_PATH}" /usr/local/www/nextcloud/themes nullfs rw 0 0
+iocage fstab -a "${JAIL_NAME}" "${THEMES_PATH}" /usr/local/www/nextcloud/themes nullfs rw 0 0
 if [ "${DATABASE}" = "mariadb" ]; then
   mkdir -p "${JAILS_MOUNT}"/jails/${JAIL_NAME}/root/var/db/mysql
   iocage fstab -a "${JAIL_NAME}" "${DB_PATH}/mariadb"  /var/db/mysql  nullfs  rw  0  0

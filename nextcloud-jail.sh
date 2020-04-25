@@ -202,15 +202,17 @@ rm /tmp/pkg.json
 
 #####
 #
-# Folder Creation and Mounting
+# Directory Creation and Mounting
 #
 #####
 
 
-mkdir -p "${DB_PATH}"/
+mkdir -p "${DB_PATH}"/"${DATABASE}"
 chown -R 88:88 "${DB_PATH}"/
 mkdir -p "${FILES_PATH}"
 chown -R 80:80 "${FILES_PATH}"
+mkdir -p "${CONFIG_PATH}"
+mkdir -p "${THEMES_PATH}"
 mkdir -p "${PORTS_PATH}"/ports
 mkdir -p "${PORTS_PATH}"/db
 iocage exec "${JAIL_NAME}" mkdir -p /mnt/files

@@ -145,6 +145,7 @@ then
   echo "DB_PATH, FILES_PATH, CONFIG_PATH and PORTS_PATH must all be different!"
   exit 1
 elif [ "${THEMES_PATH}" = "${THEMES_PATH}" ] || [ "${THEMES_PATH}" = "${PORTS_PATH}" ] || [ "${THEMES_PATH}" = "${DB_PATH}" ] || [ "${THEMES_PATH}" = "${CONFIG_PATH}" ]
+then
   echo "DB_PATH, FILES_PATH, CONFIG_PATH, THEMES_PATH and PORTS_PATH must all be different!"
   exit 1
 fi

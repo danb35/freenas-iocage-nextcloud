@@ -44,7 +44,9 @@ Under which you create 4 other datasets
 - one named `themes`, which will store the Nextcloud themes.
 - one called `db`, which will store the SQL database.  For optimal performance, set the record size of the `db` dataset to 16 KB (under Advanced Settings in the FreeNAS web GUI).  It's also recommended to cache only metadata on the `db` dataset; you can do this by running `zfs set primarycache=metadata poolname/db`.
 
-If you use 1 dataset with subfolders it's recomended to use a similair structure.
+If you use 1 dataset with subfolders it's recomended to use a similar structure.
+
+If these are not present, a directory `/nextcloud` will be created in `$POOL_PATH`, and subdirectories of `db` (with a subdirectory of either `mariadb` or `pgsql`, depending on which database you chose), `files`, `config`, and `themes` will be created there.  But for a variety of reasons, it's preferred to keep these things in their own dataset.
 
 ### Installation
 Download the repository to a convenient directory on your FreeNAS system by running `git clone https://github.com/danb35/freenas-iocage-nextcloud`.  Then change into the new directory and create a file called `nextcloud-config`.  It should look like this:

@@ -16,6 +16,7 @@ fi
 
 # Initialize defaults
 JAIL_IP=""
+JAIL_INTERFACES=""
 DEFAULT_GW_IP=""
 INTERFACE="vnet0"
 VNET="on"
@@ -70,6 +71,10 @@ fi
 if [ -z "${JAIL_IP}" ]; then
   echo 'Configuration error: JAIL_IP must be set'
   exit 1
+fi
+if [ -z "${JAIL_INTERFACES}" ]; then
+  echo 'JAIL_INTERFACES not set, defaulting to: vnet0:bridge0'
+  JAIL_INTERFACES="vnet0:bridge0"
 fi
 if [ -z "${DEFAULT_GW_IP}" ]; then
   echo 'Configuration error: DEFAULT_GW_IP must be set'
@@ -175,7 +180,7 @@ cat <<__EOF__ >/tmp/pkg.json
 __EOF__
 
 # Create the jail and install previously listed packages
-if ! iocage create --name "${JAIL_NAME}" -p /tmp/pkg.json -r "${RELEASE}" ip4_addr="${INTERFACE}|${JAIL_IP}/24" defaultrouter="${DEFAULT_GW_IP}" boot="on" host_hostname="${JAIL_NAME}" vnet="${VNET}"
+if ! iocage create --name "${JAIL_NAME}" -p /tmp/pkg.json -r "${RELEASE}" interfaces="${JAIL_INTERFACES}" ip4_addr="${INTERFACE}|${JAIL_IP}/24" defaultrouter="${DEFAULT_GW_IP}" boot="on" host_hostname="${JAIL_NAME}" vnet="${VNET}"
 then
 	echo "Failed to create jail"
 	exit 1

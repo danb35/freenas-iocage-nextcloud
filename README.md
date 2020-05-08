@@ -62,6 +62,7 @@ CERT_EMAIL="me@example.com"
 Many of the options are self-explanatory, and all should be adjusted to suit your needs, but only a few are mandatory.  The mandatory options are:
 
 * JAIL_IP is the IP address for your jail
+* JAIL_NETMASK is the netmask to use for JAIL_IP. Defaults to `24`.
 * DEFAULT_GW_IP is the address for your default gateway
 * POOL_PATH is the path for your data pool.
 * TIME_ZONE is the time zone of your location, in PHP notation--see the [PHP manual](http://php.net/manual/en/timezones.php) for a list of all valid time zones.

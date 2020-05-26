@@ -186,7 +186,7 @@ cat <<__EOF__ >/tmp/pkg.json
   "php73-session","php73-wddx","php73-xsl","php73-filter","php73-pecl-APCu",
   "php73-curl","php73-fileinfo","php73-bz2","php73-intl","php73-openssl",
   "php73-ldap","php73-ftp","php73-imap","php73-exif","php73-gmp",
-  "php73-pecl-memcache","php73-pecl-imagick","php73-pecl-smbclient","bash","perl5",
+  "php73-pecl-memcache","php73-pecl-imagick","php73-pecl-smbclient","php73-opcache","php73-pcntl","php73-bcmath","php73-pecl-APCu","bash","perl5",
   "p5-Locale-gettext","help2man","texinfo","m4","autoconf"
   ]
 }
@@ -224,13 +224,15 @@ fi
 iocage exec "${JAIL_NAME}" mkdir -p /mnt/includes
 iocage exec "${JAIL_NAME}" mkdir -p /usr/local/www/nextcloud/config
 mkdir -p "${JAILS_MOUNT}"/jails/${JAIL_NAME}/root/usr/local/www/nextcloud/themes
-mkdir -p "${JAILS_MOUNT}"/jails/${JAIL_NAME}/root/var/db/portsnap
 mkdir -p "${JAILS_MOUNT}"/jails/${JAIL_NAME}/root/mnt/files
 mkdir -p "${JAILS_MOUNT}"/jails/${JAIL_NAME}/root/mnt/includes
-mkdir -p "${JAILS_MOUNT}"/jails/${JAIL_NAME}/root/usr/ports
 
-iocage fstab -a "${JAIL_NAME}" "${PORTS_PATH}"/ports /usr/ports nullfs rw 0 0
-iocage fstab -a "${JAIL_NAME}" "${PORTS_PATH}"/db /var/db/portsnap nullfs rw 0 0
+# Ports not currently used, Commented out for future use
+#mkdir -p "${JAILS_MOUNT}"/jails/${JAIL_NAME}/root/var/db/portsnap
+#mkdir -p "${JAILS_MOUNT}"/jails/${JAIL_NAME}/root/usr/ports
+#iocage fstab -a "${JAIL_NAME}" "${PORTS_PATH}"/ports /usr/ports nullfs rw 0 0
+#iocage fstab -a "${JAIL_NAME}" "${PORTS_PATH}"/db /var/db/portsnap nullfs rw 0 0
+
 iocage fstab -a "${JAIL_NAME}" "${FILES_PATH}" /mnt/files nullfs rw 0 0
 iocage fstab -a "${JAIL_NAME}" "${CONFIG_PATH}" /usr/local/www/nextcloud/config nullfs rw 0 0
 iocage fstab -a "${JAIL_NAME}" "${THEMES_PATH}" /usr/local/www/nextcloud/themes nullfs rw 0 0
@@ -258,10 +260,8 @@ elif [ "${DATABASE}" = "pgsql" ]; then
   iocage exec "${JAIL_NAME}" pkg install -qy postgresql10-server php73-pgsql php73-pdo_pgsql
 fi
 
-iocage exec "${JAIL_NAME}" "if [ -z /usr/ports ]; then portsnap fetch extract; else portsnap auto; fi"
-
-iocage exec "${JAIL_NAME}" sh -c "make -C /usr/ports/www/php73-opcache clean install BATCH=yes"
-iocage exec "${JAIL_NAME}" sh -c "make -C /usr/ports/devel/php73-pcntl clean install BATCH=yes"
+# Ports not currently used, Commented out for future use
+#iocage exec "${JAIL_NAME}" "if [ -z /usr/ports ]; then portsnap fetch extract; else portsnap auto; fi"
 
 fetch -o /tmp https://getcaddy.com
 if ! iocage exec "${JAIL_NAME}" bash -s personal "${DL_FLAGS}" < /tmp/getcaddy.com

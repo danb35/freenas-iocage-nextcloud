@@ -156,6 +156,18 @@ then
   exit 1
 fi
 
+# Extract IP and netmask, sanity check netmask
+IP=$(echo ${JAIL_IP} | cut -f1 -d/)
+NETMASK=$(echo ${JAIL_IP} | cut -f2 -d/)
+if [ "${NETMASK}" = "${IP}" ]
+then
+  NETMASK="24"
+fi
+if [ "${NETMASK}" -lt 8 ] || [ "${NETMASK}" -gt 30 ]
+then
+  NETMASK="24"
+fi
+
 # Check for reinstall
 if [ "$(ls -A "${CONFIG_PATH}")" ]; then
 	echo "Existing Nextcloud config detected... Checking Database compatibility for reinstall"
@@ -193,7 +205,7 @@ cat <<__EOF__ >/tmp/pkg.json
 __EOF__
 
 # Create the jail and install previously listed packages
-if ! iocage create --name "${JAIL_NAME}" -p /tmp/pkg.json -r "${RELEASE}" interfaces="${JAIL_INTERFACES}" ip4_addr="${INTERFACE}|${JAIL_IP}/24" defaultrouter="${DEFAULT_GW_IP}" boot="on" host_hostname="${JAIL_NAME}" vnet="${VNET}"
+if ! iocage create --name "${JAIL_NAME}" -p /tmp/pkg.json -r "${RELEASE}" interfaces="${JAIL_INTERFACES}" ip4_addr="${INTERFACE}|${IP}/${NETMASK}" defaultrouter="${DEFAULT_GW_IP}" boot="on" host_hostname="${JAIL_NAME}" vnet="${VNET}"
 then
 	echo "Failed to create jail"
 	exit 1
@@ -333,7 +345,7 @@ if [ "${DATABASE}" = "mariadb" ]; then
 fi
 iocage exec "${JAIL_NAME}" sed -i '' "s/yourhostnamehere/${HOST_NAME}/" /usr/local/www/Caddyfile
 iocage exec "${JAIL_NAME}" sed -i '' "s/DNS-PLACEHOLDER/${DNS_SETTING}/" /usr/local/www/Caddyfile
-iocage exec "${JAIL_NAME}" sed -i '' "s/JAIL-IP/${JAIL_IP}/" /usr/local/www/Caddyfile
+iocage exec "${JAIL_NAME}" sed -i '' "s/JAIL-IP/${IP}/" /usr/local/www/Caddyfile
 iocage exec "${JAIL_NAME}" sed -i '' "s|mytimezone|${TIME_ZONE}|" /usr/local/etc/php.ini
 
 iocage exec "${JAIL_NAME}" sysrc caddy_enable="YES"
@@ -420,7 +432,7 @@ fi
 iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ config:system:set htaccess.RewriteBase --value="/"'
 iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ maintenance:update:htaccess'
 iocage exec "${JAIL_NAME}" su -m www -c "php /usr/local/www/nextcloud/occ config:system:set trusted_domains 1 --value=\"${HOST_NAME}\""
-iocage exec "${JAIL_NAME}" su -m www -c "php /usr/local/www/nextcloud/occ config:system:set trusted_domains 2 --value=\"${JAIL_IP}\""
+iocage exec "${JAIL_NAME}" su -m www -c "php /usr/local/www/nextcloud/occ config:system:set trusted_domains 2 --value=\"${IP}\""
 iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ app:enable encryption'
 iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ encryption:enable'
 iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ encryption:disable'

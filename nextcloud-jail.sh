@@ -288,7 +288,7 @@ fi
 #
 #####
 
-FILE="latest-18.tar.bz2"
+FILE="latest-19.tar.bz2"
 if ! iocage exec "${JAIL_NAME}" fetch -o /tmp https://download.nextcloud.com/server/releases/"${FILE}" https://download.nextcloud.com/server/releases/"${FILE}".asc https://nextcloud.com/nextcloud.asc
 then
 	echo "Failed to download Nextcloud"

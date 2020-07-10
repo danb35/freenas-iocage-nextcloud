@@ -1,5 +1,5 @@
 #!/bin/sh
-# Build an iocage jail under FreeNAS 11.2 using the current release of Nextcloud 17
+# Build an iocage jail under FreeNAS 11.2 using the current release of Nextcloud 19
 # https://github.com/danb35/freenas-iocage-nextcloud
 
 # Check for root privileges
@@ -36,7 +36,7 @@ DNS_CERT=0
 NO_CERT=0
 DL_FLAGS=""
 DNS_SETTING=""
-RELEASE="11.3-RELEASE"
+#RELEASE="12.0-RELEASE"
 JAILS_MOUNT=$(zfs get -H -o value mountpoint $(iocage get -p)/iocage)
 
 SCRIPT=$(readlink -f "$0")
@@ -52,7 +52,7 @@ elif [ "${DATABASE}" = "pgsql" ]; then
 fi
 
 ADMIN_PASSWORD=$(openssl rand -base64 12)
-#RELEASE=$(freebsd-version | sed "s/STABLE/RELEASE/g" | sed "s/-p[0-9]*//")
+RELEASE=$(freebsd-version | sed "s/STABLE/RELEASE/g" | sed "s/-p[0-9]*//")
 
 
 
@@ -191,14 +191,14 @@ fi
 cat <<__EOF__ >/tmp/pkg.json
 	{
   "pkgs":[
-  "nano","sudo","redis","php73-ctype","gnupg","bash",
-  "php73-dom","php73-gd","php73-iconv","php73-json","php73-mbstring",
-  "php73-posix","php73-simplexml","php73-xmlreader","php73-xmlwriter",
-  "php73-zip","php73-zlib","php73-hash","php73-xml","php73","php73-pecl-redis",
-  "php73-session","php73-wddx","php73-xsl","php73-filter","php73-pecl-APCu",
-  "php73-curl","php73-fileinfo","php73-bz2","php73-intl","php73-openssl",
-  "php73-ldap","php73-ftp","php73-imap","php73-exif","php73-gmp",
-  "php73-pecl-memcache","php73-pecl-imagick","php73-pecl-smbclient","php73-opcache","php73-pcntl","php73-bcmath","php73-pecl-APCu","bash","perl5",
+  "nano","sudo","redis","php74-ctype","gnupg","bash",
+  "php74-dom","php74-gd","php74-iconv","php74-json","php74-mbstring",
+  "php74-posix","php74-simplexml","php74-xmlreader","php74-xmlwriter",
+  "php74-zip","php74-zlib","php74-hash","php74-xml","php74","php74-pecl-redis",
+  "php74-session","php74-wddx","php74-xsl","php74-filter","php74-pecl-APCu",
+  "php74-curl","php74-fileinfo","php74-bz2","php74-intl","php74-openssl",
+  "php74-ldap","php74-ftp","php74-imap","php74-exif","php74-gmp",
+  "php74-pecl-memcache","php74-pecl-imagick","php74-pecl-smbclient","php74-opcache","php74-pcntl","php74-bcmath","php74-pecl-APCu","bash","perl5",
   "p5-Locale-gettext","help2man","texinfo","m4","autoconf"
   ]
 }
@@ -267,9 +267,9 @@ iocage exec "${JAIL_NAME}" chmod -R 770 /mnt/files
 #####
 
 if [ "${DATABASE}" = "mariadb" ]; then
-	iocage exec "${JAIL_NAME}" pkg install -qy mariadb103-server php73-pdo_mysql php73-mysqli
+	iocage exec "${JAIL_NAME}" pkg install -qy mariadb103-server php74-pdo_mysql php74-mysqli
 elif [ "${DATABASE}" = "pgsql" ]; then
-  iocage exec "${JAIL_NAME}" pkg install -qy postgresql10-server php73-pgsql php73-pdo_pgsql
+  iocage exec "${JAIL_NAME}" pkg install -qy postgresql10-server php74-pgsql php74-pdo_pgsql
 fi
 
 # Ports not currently used, Commented out for future use

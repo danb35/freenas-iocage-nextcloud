@@ -1,4 +1,4 @@
-# Not working at this time due to upstream changes by the Caddy maintainer.  More to follow.
+# DNS validation is not available at this time due to upstream changes by the Caddy maintainer.  This should still work with HTTP validation, self-signed cert, nor without SSL.
 
 # freenas-iocage-nextcloud
 Script to create an iocage jail on FreeNAS for the latest Nextcloud 19 release, including Caddy 1.0, MariaDB 10.3/PostgreSQL 10, and Let's Encrypt

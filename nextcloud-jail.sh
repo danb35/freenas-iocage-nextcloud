@@ -104,6 +104,12 @@ if [ $STANDALONE_CERT -eq 1 ] && [ $DNS_CERT -eq 1 ] ; then
   exit 1
 fi
 
+if [ $DNS_CERT -eq 1 ] ; then
+  echo "Sorry, DNS validation is temporarily unavailable due to"
+  echo "decisions of the upstream Caddy maintainer."
+  exit 1
+fi
+
 if [ $DNS_CERT -eq 1 ] && [ -z "${DNS_PLUGIN}" ] ; then
   echo "DNS_PLUGIN must be set to a supported DNS provider."
   echo "See https://caddyserver.com/docs under the heading of \"DNS Providers\" for list."
@@ -198,8 +204,9 @@ cat <<__EOF__ >/tmp/pkg.json
   "php74-session","php74-xsl","php74-filter","php74-pecl-APCu",
   "php74-curl","php74-fileinfo","php74-bz2","php74-intl","php74-openssl",
   "php74-ldap","php74-ftp","php74-imap","php74-exif","php74-gmp",
-  "php74-pecl-memcache","php74-pecl-imagick","php74-pecl-smbclient","php74-opcache","php74-pcntl","php74-bcmath","php74-pecl-APCu","bash","perl5",
-  "p5-Locale-gettext","help2man","texinfo","m4","autoconf"
+  "php74-pecl-memcache","php74-pecl-imagick","php74-pecl-smbclient",
+  "php74-opcache","php74-pcntl","php74-bcmath","php74-pecl-APCu","bash","perl5",
+  "p5-Locale-gettext","help2man","texinfo","m4","autoconf","caddy"
   ]
 }
 __EOF__
@@ -275,12 +282,13 @@ fi
 # Ports not currently used, Commented out for future use
 #iocage exec "${JAIL_NAME}" "if [ -z /usr/ports ]; then portsnap fetch extract; else portsnap auto; fi"
 
-fetch -o /tmp https://getcaddy.com
-if ! iocage exec "${JAIL_NAME}" bash -s personal "${DL_FLAGS}" < /tmp/getcaddy.com
-then
-	echo "Failed to download/install Caddy"
-	exit 1
-fi
+# Caddy1 build server no longer available, so installing from package
+#fetch -o /tmp https://getcaddy.com
+#if ! iocage exec "${JAIL_NAME}" bash -s personal "${DL_FLAGS}" < /tmp/getcaddy.com
+#then
+#	echo "Failed to download/install Caddy"
+#	exit 1
+#fi
 
 #####
 #

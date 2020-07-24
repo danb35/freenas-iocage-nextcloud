@@ -206,7 +206,7 @@ cat <<__EOF__ >/tmp/pkg.json
   "php74-ldap","php74-ftp","php74-imap","php74-exif","php74-gmp",
   "php74-pecl-memcache","php74-pecl-imagick","php74-pecl-smbclient",
   "php74-opcache","php74-pcntl","php74-bcmath","php74-pecl-APCu","bash","perl5",
-  "p5-Locale-gettext","help2man","texinfo","m4","autoconf","caddy"
+  "p5-Locale-gettext","help2man","texinfo","m4","autoconf"
   ]
 }
 __EOF__
@@ -336,6 +336,7 @@ iocage exec "${JAIL_NAME}" cp -f /mnt/includes/www.conf /usr/local/etc/php-fpm.d
 if [ $STANDALONE_CERT -eq 1 ] || [ $DNS_CERT -eq 1 ]; then
   iocage exec "${JAIL_NAME}" cp -f /mnt/includes/remove-staging.sh /root/
 fi
+iocage exec "${JAIL_NAME}" cp -f /mnt/includes/caddy_freebsd_amd64_custom /usr/local/bin/caddy
 if [ $NO_CERT -eq 1 ]; then
   echo "Copying Caddyfile for no SSL"
   iocage exec "${JAIL_NAME}" cp -f /mnt/includes/Caddyfile-nossl /usr/local/www/Caddyfile

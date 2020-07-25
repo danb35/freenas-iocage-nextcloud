@@ -25,7 +25,7 @@ load_rc_config $name
 
 # Defaults
 : ${caddy_enable:=NO}
-: ${caddy_config:=%%ETCDIR%%/%%CADDY_CONFIG%%}
+: ${caddy_config:="/usr/local/etc/Caddyfile"}
 : ${caddy_adapter:=caddyfile}
 : ${caddy_extra_flags:=""}
 

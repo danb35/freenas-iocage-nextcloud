@@ -1,3 +1,7 @@
+{
+	debug
+}
+
 yourhostnamehere:80 {
 
         root    * /usr/local/www/nextcloud

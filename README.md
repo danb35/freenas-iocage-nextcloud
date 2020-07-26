@@ -1,7 +1,7 @@
-# DNS validation is not available at this time due to upstream changes by the Caddy maintainer.  This should still work with HTTP validation, self-signed cert, or without SSL.
+# It should go without saying (because this isn't the master branch) that this isn't expected to be release-quality code.  Use at your own risk and be prepared to help troubleshoot.
 
 # freenas-iocage-nextcloud
-Script to create an iocage jail on FreeNAS for the latest Nextcloud 19 release, including Caddy 1.0, MariaDB 10.3/PostgreSQL 10, and Let's Encrypt
+Script to create an iocage jail on FreeNAS for the latest Nextcloud 19 release, including Caddy 2.x, MariaDB 10.3/PostgreSQL 10, and Let's Encrypt
 
 This script will create an iocage jail on FreeNAS 11.3 or TrueNAS CORE 12.0 with the latest release of Nextcloud 19, along with its dependencies.  It will obtain a trusted certificate from Let's Encrypt for the system, install it, and configure it to renew automatically.  It will create the Nextcloud database and generate a strong root password and user password for the database system.  It will configure the jail to store the database and Nextcloud user data outside the jail, so it will not be lost in the event you need to rebuild the jail.
 
@@ -18,7 +18,7 @@ This script works best when your installation is able to obtain a certificate fr
 * Second, one of these two conditions must be met in order for Let's Encrypt to validate your control over the domain name:
 
   * You must be able and willing to open ports 80 and 443 from the entire Internet to the jail, and leave them open.  If this applies, do it **before** running this script.
-  * DNS hosting for the domain name needs to be with a provider that Caddy supports, to automatically update the DNS records needed to prove your control over the domain.  See the [Caddy documentation](https://caddyserver.com/docs) under the heading of "DNS Providers" for the supported providers, and what information you'll need in order to proceed.
+  * DNS hosting for the domain name needs to be with a provider that Caddy supports.  At this time, only Cloudflare is supported.
 
 [Cloudflare](https://www.cloudflare.com/) provides DNS hosting at no cost, and it's well-supported by Caddy.  Cloudflare also provides Dynamic DNS service, if your desired Dynamic DNS client supports their API.  If it doesn't, [DNS-O-Matic](https://dnsomatic.com/) is a Dynamic DNS provider that will interface with many DNS hosts including Cloudflare, has a much simpler API that's more widely supported, and is also free of charge.  So, even if you have a dynamic IP address (as most residential Internet users do), you don't have your own domain, and you aren't willing to pay for a domain or any other relevant service, and you aren't willing to open any ports from the Internet to your system, you can still get a trusted certificate from Let's Encrypt by following these steps:
 
@@ -70,8 +70,8 @@ Many of the options are self-explanatory, and all should be adjusted to suit you
 * HOST_NAME is the fully-qualified domain name you want to assign to your installation.  You must own (or at least control) this domain, because Let's Encrypt will test that control.
 * DNS_CERT, STANDALONE_CERT, SELFSIGNED_CERT, and NO_CERT determine which method will be used to generate a TLS certificate (or, in the case of NO_CERT, indicate that you don't want to use SSL at all).  DNS_CERT and STANDALONE_CERT indicate use of DNS or HTTP validation for Let's Encrypt, respectively.  One **and only one** of these must be set to 1.
 * CERT_EMAIL is the email address Let's Encrypt will use to notify you of certificate expiration.  This is mandatory regardless of whether you're using Let's Encrypt (Caddy won't start without it), but it's only used with Let's Encrypt.  If you are **not** using one of the Let's Encrypt certificate options, you can set this to a dummy address as above.  If you **are** using Let's Encrypt, though, it should be set to a valid address for the system admin.
-* DNS_PLUGIN: If DNS_CERT is set, DNS_PLUGIN must contain the name of the DNS validation plugin you'll use with Caddy to validate domain control.  See the [Caddy documentation](https://caddyserver.com/docs) under the heading of "DNS Providers" for the available plugins, but omit the leading "tls.dns.".  For example, to use Cloudflare, set `DNS_PLUGIN="cloudflare"`.
-* DNS_ENV: If DNS_CERT is set, DNS_ENV must contain the authentication credentials for your DNS provider.  See the [Caddy documentation](https://caddyserver.com/docs) under the heading of "DNS Providers" for further details.  For Cloudflare, you'd set `DNS_ENV="CLOUDFLARE_EMAIL=foo@bar.baz CLOUDFLARE_API_KEY=blah"`, using your the email address of your Cloudflare account and your Global API key--the newer API tokens aren't currently supported.
+* DNS_PLUGIN: If DNS_CERT is set, DNS_PLUGIN must contain the name of the DNS validation plugin you'll use with Caddy to validate domain control.  At this time, the only valid value is `cloudflare`.
+* DNS_TOKEN: If DNS_CERT is set, this must be set to a properly-scoped Cloudflare API Token.  You will need to create an API token through Cloudflare's dashboard, which must have "Zone / Zone / Read" and "Zone / DNS / Edit" permissions on the zone (i.e., the domain) you're using for your installation.  See [this documentation](https://github.com/libdns/cloudflare) for further details.
  
 In addition, there are some other options which have sensible defaults, but can be adjusted if needed.  These are:
 

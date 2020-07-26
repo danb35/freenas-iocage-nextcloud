@@ -17,6 +17,10 @@ yourhostnamehere {
         	env front_controller_active true
         }
 
+		tls {
+			dns dns_plugin api_token
+		}
+
         header {
                 # enable HSTS
                 # Strict-Transport-Security max-age=31536000;

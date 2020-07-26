@@ -1,5 +1,5 @@
 #!/bin/sh
-# Build an iocage jail under FreeNAS 11.2 using the current release of Nextcloud 19
+# Build an iocage jail under FreeNAS 11.3-12.0 using the current release of Nextcloud 19
 # https://github.com/danb35/freenas-iocage-nextcloud
 
 # Check for root privileges
@@ -104,28 +104,22 @@ if [ $STANDALONE_CERT -eq 1 ] && [ $DNS_CERT -eq 1 ] ; then
   exit 1
 fi
 
-if [ $DNS_CERT -eq 1 ] ; then
-  echo "Sorry, DNS validation is temporarily unavailable due to"
-  echo "decisions of the upstream Caddy maintainer."
-  exit 1
-fi
-
 if [ $DNS_CERT -eq 1 ] && [ -z "${DNS_PLUGIN}" ] ; then
   echo "DNS_PLUGIN must be set to a supported DNS provider."
   echo "See https://caddyserver.com/docs under the heading of \"DNS Providers\" for list."
   echo "Be sure to omit the prefix of \"tls.dns.\"."
   exit 1
 fi  
-if [ $DNS_CERT -eq 1 ] && [ -z "${DNS_ENV}" ] ; then
-  echo "DNS_ENV must be set to a your DNS provider\'s authentication credentials."
-  echo "See https://caddyserver.com/docs under the heading of \"DNS Providers\" for more."
-  exit 1
-fi  
+#if [ $DNS_CERT -eq 1 ] && [ -z "${DNS_ENV}" ] ; then
+#  echo "DNS_ENV must be set to a your DNS provider\'s authentication credentials."
+#  echo "See https://caddyserver.com/docs under the heading of \"DNS Providers\" for more."
+#  exit 1
+#fi  
 
-if [ $DNS_CERT -eq 1 ] ; then
-  DL_FLAGS="tls.dns.${DNS_PLUGIN}"
-  DNS_SETTING="dns ${DNS_PLUGIN}"
-fi
+#if [ $DNS_CERT -eq 1 ] ; then
+#  DL_FLAGS="tls.dns.${DNS_PLUGIN}"
+#  DNS_SETTING="dns ${DNS_PLUGIN}"
+#fi
 
 # If DB_PATH, FILES_PATH, CONFIG_PATH and PORTS_PATH weren't set in nextcloud-config, set them
 if [ -z "${DB_PATH}" ]; then
@@ -205,7 +199,7 @@ cat <<__EOF__ >/tmp/pkg.json
   "php74-curl","php74-fileinfo","php74-bz2","php74-intl","php74-openssl",
   "php74-ldap","php74-ftp","php74-imap","php74-exif","php74-gmp",
   "php74-pecl-memcache","php74-pecl-imagick","php74-pecl-smbclient",
-  "php74-opcache","php74-pcntl","php74-bcmath","php74-pecl-APCu","bash","perl5",
+  "php74-opcache","php74-pcntl","php74-bcmath","php74-pecl-APCu","perl5",
   "p5-Locale-gettext","help2man","texinfo","m4","autoconf"
   ]
 }
@@ -224,7 +218,6 @@ rm /tmp/pkg.json
 # Directory Creation and Mounting
 #
 #####
-
 
 mkdir -p "${DB_PATH}"/"${DATABASE}"
 chown -R 88:88 "${DB_PATH}"/
@@ -343,6 +336,9 @@ if [ $NO_CERT -eq 1 ]; then
 elif [ $SELFSIGNED_CERT -eq 1 ]; then
   echo "Copying Caddyfile for self-signed cert"
   iocage exec "${JAIL_NAME}" cp -f /mnt/includes/Caddyfile-selfsigned /usr/local/www/Caddyfile
+elif [ $DNS_CERT -eq 1 ]; then
+  echo "Copying Caddyfile for Let's Encrypt DNS cert"
+  iocage exec "${JAIL_NAME}" cp -f /mnt/includes/Caddyfile-dns /usr/local/www/Caddyfile
 else
   echo "Copying Caddyfile for Let's Encrypt cert"
   iocage exec "${JAIL_NAME}" cp -f /mnt/includes/Caddyfile /usr/local/www/
@@ -354,7 +350,8 @@ if [ "${DATABASE}" = "mariadb" ]; then
 fi
 iocage exec "${JAIL_NAME}" sed -i '' "s/yourhostnamehere/${HOST_NAME}/" /usr/local/www/Caddyfile
 #iocage exec "${JAIL_NAME}" sed -i '' "s/DNS-PLACEHOLDER/${DNS_SETTING}/" /usr/local/www/Caddyfile
-iocage exec "${JAIL_NAME}" sed -i '' "s/JAIL-IP/${IP}/" /usr/local/www/Caddyfile
+iocage exec "${JAIL_NAME}" sed -i '' "s/dns_plugin/${DNS_PLUGIN}/" /usr/local/www/Caddyfile
+iocage exec "${JAIL_NAME}" sed -i '' "s/api_token/${DNS_TOKEN}/" /usr/local/www/Caddyfile
 iocage exec "${JAIL_NAME}" sed -i '' "s/youremailhere/${CERT_EMAIL}/" /usr/local/www/Caddyfile
 iocage exec "${JAIL_NAME}" sed -i '' "s|mytimezone|${TIME_ZONE}|" /usr/local/etc/php.ini
 
@@ -392,8 +389,8 @@ if [ "${DATABASE}" = "mariadb" ]; then
   iocage exec "${JAIL_NAME}" mysql -u root -e "DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');"
   iocage exec "${JAIL_NAME}" mysql -u root -e "DROP DATABASE IF EXISTS test;"
   iocage exec "${JAIL_NAME}" mysql -u root -e "DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';"
-  iocage exec "${JAIL_NAME}" mysqladmin --user=root password "${DB_ROOT_PASSWORD}"
-  iocage exec "${JAIL_NAME}" mysqladmin reload
+  iocage exec "${JAIL_NAME}" mysqladmin --user=root password "${DB_ROOT_PASSWORD}" reload
+#  iocage exec "${JAIL_NAME}" mysqladmin reload
   iocage exec "${JAIL_NAME}" cp -f /mnt/includes/my.cnf /root/.my.cnf
   iocage exec "${JAIL_NAME}" sed -i '' "s|mypassword|${DB_ROOT_PASSWORD}|" /root/.my.cnf
 elif [ "${DATABASE}" = "pgsql" ]; then
@@ -444,7 +441,7 @@ fi
 iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ config:system:set htaccess.RewriteBase --value="/"'
 iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ maintenance:update:htaccess'
 iocage exec "${JAIL_NAME}" su -m www -c "php /usr/local/www/nextcloud/occ config:system:set trusted_domains 1 --value=\"${HOST_NAME}\""
-iocage exec "${JAIL_NAME}" su -m www -c "php /usr/local/www/nextcloud/occ config:system:set trusted_domains 2 --value=\"${IP}\""
+#iocage exec "${JAIL_NAME}" su -m www -c "php /usr/local/www/nextcloud/occ config:system:set trusted_domains 2 --value=\"${IP}\""
 #iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ app:enable encryption'
 #iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ encryption:enable'
 #iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ encryption:disable'

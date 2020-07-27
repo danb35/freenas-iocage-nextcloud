@@ -20,15 +20,9 @@ This script works best when your installation is able to obtain a certificate fr
   * You must be able and willing to open ports 80 and 443 from the entire Internet to the jail, and leave them open.  If this applies, do it **before** running this script.
   * DNS hosting for the domain name needs to be with a provider that Caddy supports.  At this time, only Cloudflare is supported.
 
-[Cloudflare](https://www.cloudflare.com/) provides DNS hosting at no cost, and it's well-supported by Caddy.  Cloudflare also provides Dynamic DNS service, if your desired Dynamic DNS client supports their API.  If it doesn't, [DNS-O-Matic](https://dnsomatic.com/) is a Dynamic DNS provider that will interface with many DNS hosts including Cloudflare, has a much simpler API that's more widely supported, and is also free of charge.  So, even if you have a dynamic IP address (as most residential Internet users do), you don't have your own domain, and you aren't willing to pay for a domain or any other relevant service, and you aren't willing to open any ports from the Internet to your system, you can still get a trusted certificate from Let's Encrypt by following these steps:
+[Cloudflare](https://www.cloudflare.com/) provides DNS hosting at no cost, and it's well-supported by Caddy.  Cloudflare also provides Dynamic DNS service, if your desired Dynamic DNS client supports their API.  If it doesn't, [DNS-O-Matic](https://dnsomatic.com/) is a Dynamic DNS provider that will interface with many DNS hosts including Cloudflare, has a much simpler API that's more widely supported, and is also free of charge.
 
-* Register a free domain with Freenom.  Be sure to keep up with the renewal requirements.
-* Sign up for a free account with Cloudflare, and activate it for free DNS service only on your domain.
-* Tell Freenom to use Cloudflare for DNS for your domain.
-* Either
-  * Set up your dynamic DNS client to update Cloudflare directly, or
-  * Sign up for a free account with DNS-O-Matic, and configure it to update your Cloudflare DNS
-* Set up this script to do DNS validation, tell it to use the cloudflare plugin, and give it your email address and Global API key.
+This document previously had a discussion of using Freenom, Cloudflare, and DNS-O-Matic to give you free dynamic DNS and certificate validation with a free domain.  However, due to abuse, Cloudflare has removed the ability to use its API with free domains when using Cloudflare's free plan.  For this to work, you'll need to pay either for Cloudflare or for a domain (and the latter is likely less expensive).  If you want to use a Freenom domain, you'll need to be able and willing to open ports 80 and 443 to your jail, so you can get your certificate without using DNS validation.
 
 If you aren't able or willing to obtain a certificate from Let's Encrypt, this script also supports configuring Caddy with a self-signed certificate, or with no certificate (and thus no HTTPS) at all.
 
@@ -51,7 +45,7 @@ If you use 1 dataset with subfolders it's recomended to use a similar structure.
 If these are not present, a directory `/nextcloud` will be created in `$POOL_PATH`, and subdirectories of `db` (with a subdirectory of either `mariadb` or `pgsql`, depending on which database you chose), `files`, `config`, and `themes` will be created there.  But for a variety of reasons, it's preferred to keep these things in their own dataset.
 
 ### Installation
-Download the repository to a convenient directory on your FreeNAS system by running `git clone https://github.com/danb35/freenas-iocage-nextcloud`.  Then change into the new directory and create a file called `nextcloud-config`.  In its minimal form, it would look like this:
+Download the repository to a convenient directory on your FreeNAS system by changing to that directory and running `git clone https://github.com/danb35/freenas-iocage-nextcloud`.  Then change into the new `freenas-iocage-nextcloud` directory and create a file called `nextcloud-config` with your favorite text editor.  In its minimal form, it would look like this:
 ```
 JAIL_IP="192.168.1.199"
 DEFAULT_GW_IP="192.168.1.1"
@@ -59,7 +53,6 @@ POOL_PATH="/mnt/tank"
 TIME_ZONE="America/New_York"
 HOST_NAME="YOUR_FQDN"
 STANDALONE_CERT=1
-CERT_EMAIL="me@example.com"
 ```
 Many of the options are self-explanatory, and all should be adjusted to suit your needs, but only a few are mandatory.  The mandatory options are:
 
@@ -69,7 +62,6 @@ Many of the options are self-explanatory, and all should be adjusted to suit you
 * TIME_ZONE is the time zone of your location, in PHP notation--see the [PHP manual](http://php.net/manual/en/timezones.php) for a list of all valid time zones.
 * HOST_NAME is the fully-qualified domain name you want to assign to your installation.  If you are planning to get a Let's Encrypt certificate (recommended), you must own (or at least control) this domain, because Let's Encrypt will test that control.  If you're using a self-signed cert, or not getting a cert at all, it's only important that this hostname resolve to your jail inside your network.
 * DNS_CERT, STANDALONE_CERT, SELFSIGNED_CERT, and NO_CERT determine which method will be used to generate a TLS certificate (or, in the case of NO_CERT, indicate that you don't want to use SSL at all).  DNS_CERT and STANDALONE_CERT indicate use of DNS or HTTP validation for Let's Encrypt, respectively.  One **and only one** of these must be set to 1.
-* CERT_EMAIL is the email address Let's Encrypt will use to notify you of certificate expiration.  This is optional.  If you **are** using Let's Encrypt, though, it should be set to a valid address for the system admin.
 * DNS_PLUGIN: If DNS_CERT is set, DNS_PLUGIN must contain the name of the DNS validation plugin you'll use with Caddy to validate domain control.  At this time, the only valid value is `cloudflare`.
 * DNS_TOKEN: If DNS_CERT is set, this must be set to a properly-scoped Cloudflare API Token.  You will need to create an API token through Cloudflare's dashboard, which must have "Zone / Zone / Read" and "Zone / DNS / Edit" permissions on the zone (i.e., the domain) you're using for your installation.  See [this documentation](https://github.com/libdns/cloudflare) for further details.
  
@@ -80,6 +72,7 @@ In addition, there are some other options which have sensible defaults, but can 
 * DATABASE: Which database management system to use.  Default is "mariadb", but can be set to "pgsql" if you prefer to use PostgreSQL.
 * INTERFACE: The network interface to use for the jail.  Defaults to `vnet0`.
 * VNET: Whether to use the iocage virtual network stack.  Defaults to `on`.
+* CERT_EMAIL is the email address Let's Encrypt will use to notify you of certificate expiration, or for occasional other important matters.  This is optional.  If you **are** using Let's Encrypt, though, it should be set to a valid address for the system admin.
 
 If you're going to open ports 80 and 443 from the outside world to your jail, do so before running the script, and set STANDALONE_CERT to 1.  If not, but you use a DNS provider that's supported by Caddy, set DNS_CERT to 1.  If neither of these is true, use either NO_CERT (if you want to run without SSL at all) or SELFSIGNED_CERT (to generate a self-signed certificate--this is also the setting to use if you want to use a certificate from another source).
 
@@ -89,7 +82,7 @@ Also, HOST_NAME needs to resolve to your jail from **inside** your network.  You
 Once you've downloaded the script and prepared the configuration file, run this script (`./nextcloud-jail.sh`).  The script will run for several minutes.  When it finishes, your jail will be created, Nextcloud will be installed and configured, and you'll be shown the randomly-generated password for the default user ("admin").  You can then log in and create users, add data, and generally do whatever else you like.
 
 ### Obtaining a trusted Let's Encrypt cert
-This configuration generated by this script will obtain certs from a non-trusted certificate authority by default.  This is to prevent you from exhausting the [Let's Encrypt rate limits](https://letsencrypt.org/docs/rate-limits/) while you're testing things out.  Once you're sure things are working, you'll want to get a trusted cert instead.  To do this, you can use a simple script that's included.  As long as you haven't changed the default jail name, you can do this by running `iocage exec nextcloud /root/remove-staging.sh`.
+This configuration generated by this script will obtain certs from a non-trusted certificate authority by default.  This is to prevent you from exhausting the [Let's Encrypt rate limits](https://letsencrypt.org/docs/rate-limits/) while you're testing things out.  Once you're sure things are working, you'll want to get a trusted cert instead.  To do this, you can use a simple script that's included.  As long as you haven't changed the default jail name, you can do this by running `iocage exec nextcloud /root/remove-staging.sh` (if you have changed the jail name, replace "nextcloud" in that command with the jail name).
 
 ### To Do
 I'd appreciate any suggestions (or, better yet, pull requests) to improve the various config files I'm using.  Most of them are adapted from the default configuration files that ship with the software in question, and have only been lightly edited to work in this application.  But if there are changes to settings or organization that could improve performance, reliability, or security, I'd like to hear about them.

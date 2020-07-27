@@ -1,5 +1,6 @@
 {
 	debug
+	# default_sni yourhostnamehere
 }
 
 yourhostnamehere {

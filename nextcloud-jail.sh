@@ -191,7 +191,7 @@ fi
 cat <<__EOF__ >/tmp/pkg.json
 	{
   "pkgs":[
-  "nano","sudo","redis","php74-ctype","gnupg","bash",
+  "nano","sudo","redis","php74-ctype","gnupg","bash","go","git",
   "php74-dom","php74-gd","php74-iconv","php74-json","php74-mbstring",
   "php74-posix","php74-simplexml","php74-xmlreader","php74-xmlwriter",
   "php74-zip","php74-zlib","php74-xml","php74","php74-pecl-redis",
@@ -275,13 +275,14 @@ fi
 # Ports not currently used, Commented out for future use
 #iocage exec "${JAIL_NAME}" "if [ -z /usr/ports ]; then portsnap fetch extract; else portsnap auto; fi"
 
-# Caddy1 build server no longer available, so installing from package
-#fetch -o /tmp https://getcaddy.com
-#if ! iocage exec "${JAIL_NAME}" bash -s personal "${DL_FLAGS}" < /tmp/getcaddy.com
-#then
-#	echo "Failed to download/install Caddy"
-#	exit 1
-#fi
+# Build xcaddy, use it to build Caddy
+iocage exec "${JAIL_NAME}" "go get -u github.com/caddyserver/xcaddy/cmd/xcaddy"
+iocage exec "${JAIL_NAME}" go build -o /usr/local/bin/xcaddy github.com/caddyserver/xcaddy/cmd/xcaddy
+if [ ${DNS_CERT} -eq 1 ]; then
+  iocage exec "${JAIL_NAME}" xcaddy build --output /usr/local/bin/caddy --with github.com/caddy-dns/"${DNS_PLUGIN}"
+else
+  iocage exec "${JAIL_NAME}" xcaddy build --output /usr/local/bin/caddy
+fi
 
 #####
 #
@@ -329,7 +330,6 @@ iocage exec "${JAIL_NAME}" cp -f /mnt/includes/www.conf /usr/local/etc/php-fpm.d
 if [ $STANDALONE_CERT -eq 1 ] || [ $DNS_CERT -eq 1 ]; then
   iocage exec "${JAIL_NAME}" cp -f /mnt/includes/remove-staging.sh /root/
 fi
-iocage exec "${JAIL_NAME}" cp -f /mnt/includes/caddy_freebsd_amd64_custom /usr/local/bin/caddy
 if [ $NO_CERT -eq 1 ]; then
   echo "Copying Caddyfile for no SSL"
   iocage exec "${JAIL_NAME}" cp -f /mnt/includes/Caddyfile-nossl /usr/local/www/Caddyfile

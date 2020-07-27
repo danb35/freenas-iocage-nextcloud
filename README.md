@@ -51,7 +51,7 @@ If you use 1 dataset with subfolders it's recomended to use a similar structure.
 If these are not present, a directory `/nextcloud` will be created in `$POOL_PATH`, and subdirectories of `db` (with a subdirectory of either `mariadb` or `pgsql`, depending on which database you chose), `files`, `config`, and `themes` will be created there.  But for a variety of reasons, it's preferred to keep these things in their own dataset.
 
 ### Installation
-Download the repository to a convenient directory on your FreeNAS system by running `git clone https://github.com/danb35/freenas-iocage-nextcloud`.  Then change into the new directory and create a file called `nextcloud-config`.  It should look like this:
+Download the repository to a convenient directory on your FreeNAS system by running `git clone https://github.com/danb35/freenas-iocage-nextcloud`.  Then change into the new directory and create a file called `nextcloud-config`.  In its minimal form, it would look like this:
 ```
 JAIL_IP="192.168.1.199"
 DEFAULT_GW_IP="192.168.1.1"
@@ -67,9 +67,9 @@ Many of the options are self-explanatory, and all should be adjusted to suit you
 * DEFAULT_GW_IP is the address for your default gateway
 * POOL_PATH is the path for your data pool.
 * TIME_ZONE is the time zone of your location, in PHP notation--see the [PHP manual](http://php.net/manual/en/timezones.php) for a list of all valid time zones.
-* HOST_NAME is the fully-qualified domain name you want to assign to your installation.  You must own (or at least control) this domain, because Let's Encrypt will test that control.
+* HOST_NAME is the fully-qualified domain name you want to assign to your installation.  If you are planning to get a Let's Encrypt certificate (recommended), you must own (or at least control) this domain, because Let's Encrypt will test that control.  If you're using a self-signed cert, or not getting a cert at all, it's only important that this hostname resolve to your jail inside your network.
 * DNS_CERT, STANDALONE_CERT, SELFSIGNED_CERT, and NO_CERT determine which method will be used to generate a TLS certificate (or, in the case of NO_CERT, indicate that you don't want to use SSL at all).  DNS_CERT and STANDALONE_CERT indicate use of DNS or HTTP validation for Let's Encrypt, respectively.  One **and only one** of these must be set to 1.
-* CERT_EMAIL is the email address Let's Encrypt will use to notify you of certificate expiration.  This is mandatory regardless of whether you're using Let's Encrypt (Caddy won't start without it), but it's only used with Let's Encrypt.  If you are **not** using one of the Let's Encrypt certificate options, you can set this to a dummy address as above.  If you **are** using Let's Encrypt, though, it should be set to a valid address for the system admin.
+* CERT_EMAIL is the email address Let's Encrypt will use to notify you of certificate expiration.  This is optional.  If you **are** using Let's Encrypt, though, it should be set to a valid address for the system admin.
 * DNS_PLUGIN: If DNS_CERT is set, DNS_PLUGIN must contain the name of the DNS validation plugin you'll use with Caddy to validate domain control.  At this time, the only valid value is `cloudflare`.
 * DNS_TOKEN: If DNS_CERT is set, this must be set to a properly-scoped Cloudflare API Token.  You will need to create an API token through Cloudflare's dashboard, which must have "Zone / Zone / Read" and "Zone / DNS / Edit" permissions on the zone (i.e., the domain) you're using for your installation.  See [this documentation](https://github.com/libdns/cloudflare) for further details.
  

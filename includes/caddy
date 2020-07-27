@@ -14,6 +14,8 @@
 # caddy_config (string): Optional full path for caddy config file
 # caddy_adapter (string):  Optional adapter type if the configuration is not in caddyfile format
 # caddy_extra_flags (string):  Optional flags passed to caddy start
+# caddy_logfile (string)"     Set to "/var/log/caddy.log" by default.
+#                             Defines where the process log file is written, this is not a web access log
 
 . /etc/rc.subr
 
@@ -28,6 +30,7 @@ load_rc_config $name
 : ${caddy_config:="/usr/local/etc/Caddyfile"}
 : ${caddy_adapter:=caddyfile}
 : ${caddy_extra_flags:=""}
+: ${caddy_logfile="/var/log/caddy.log"}
 
 command="/usr/local/bin/${name}"
 caddy_flags="--config ${caddy_config} --adapter ${caddy_adapter}"
@@ -35,7 +38,7 @@ pidfile=/var/run/${name}.pid
 
 # Extra Commands
 extra_commands="validate reload"
-start_cmd="${command} start ${caddy_flags} ${caddy_extra_flags} --pidfile /var/run/${name}.pid"
+start_cmd="${command} start ${caddy_flags} ${caddy_extra_flags} --pidfile /var/run/${name}.pid >> ${caddy_logfile} 2>&1"
 validate_cmd="${command} validate ${caddy_flags}"
 reload_cmd="${command} reload ${caddy_flags}"
 stop_cmd="${command} stop"

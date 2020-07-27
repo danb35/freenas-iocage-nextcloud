@@ -36,12 +36,12 @@ command="/usr/local/bin/${name}"
 caddy_flags="--config ${caddy_config} --adapter ${caddy_adapter}"
 pidfile="/var/run/${name}.pid"
 
+required_files="${caddy_config} ${command}"
+
 # Extra Commands
 extra_commands="validate reload"
 start_cmd="${command} start ${caddy_flags} ${caddy_extra_flags} --pidfile ${pidfile} >> ${caddy_logfile} 2>&1"
 validate_cmd="${command} validate ${caddy_flags}"
 reload_cmd="${command} reload ${caddy_flags}"
-stop_cmd="${command} stop"
-restart_cmd="${stop_cmd} && ${start_cmd}"
 
 run_rc_command "$1"

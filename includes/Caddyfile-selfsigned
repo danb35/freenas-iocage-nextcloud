@@ -3,38 +3,36 @@
 }
 
 yourhostnamehere {
+	root * /usr/local/www/nextcloud
+	file_server
+	log {
+		output file /var/log/yourhostnamehere.log
+		format single_field common_log
+	}
 
-        root    * /usr/local/www/nextcloud
-        file_server
-        log {
-                output file     /var/log/yourhostnamehere.log
-                format single_field common_log
-        }
+	php_fastcgi 127.0.0.1:9000 {
+		env front_controller_active true
+	}
 
-        php_fastcgi 127.0.0.1:9000 {
-        	env front_controller_active true
-        }
+	tls /usr/local/etc/pki/tls/certs/fullchain.pem /usr/local/etc/pki/tls/private/privkey.pem
 
-		tls /usr/local/etc/pki/tls/certs/fullchain.pem /usr/local/etc/pki/tls/private/privkey.pem
+	redir /.well-known/carddav /remote.php/dav 301
+	redir /.well-known/caldav /remote.php/dav 301
 
-        redir /.well-known/carddav /remote.php/dav 301
-        redir /.well-known/caldav /remote.php/dav 301
+	# .htaccess / data / config / ... shouldn't be accessible from outside
+	@forbidden {
+		path /.htaccess
+		path /data/*
+		path /config/*
+		path /db_structure
+		path /.xml
+		path /README
+		path /3rdparty/*
+		path /lib/*
+		path /templates/*
+		path /occ
+		path /console.php
+	}
 
-        # .htaccess / data / config / ... shouldn't be accessible from outside
-        @forbidden {
-                path    /.htaccess
-                path    /data/*
-                path    /config/*
-                path    /db_structure
-                path    /.xml
-                path    /README
-                path    /3rdparty/*
-                path    /lib/*
-                path    /templates/*
-                path    /occ
-                path    /console.php
-        }
-
-        respond @forbidden 404
-
+	respond @forbidden 404
 }

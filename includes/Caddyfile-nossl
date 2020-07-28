@@ -2,7 +2,7 @@
 	debug
 }
 
-yourhostnamehere:80 {
+yourhostnamehere:80, jail_ip:80 {
 	root * /usr/local/www/nextcloud
 	file_server
 	log {

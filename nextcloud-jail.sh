@@ -39,8 +39,13 @@ DNS_SETTING=""
 #RELEASE="12.0-RELEASE"
 JAILS_MOUNT=$(zfs get -H -o value mountpoint $(iocage get -p)/iocage)
 
+# Check for nextcloud-config and set configuration
 SCRIPT=$(readlink -f "$0")
 SCRIPTPATH=$(dirname "${SCRIPT}")
+if ! [ -e "${SCRIPTPATH}"/nextcloud-config ]; then
+  echo "${SCRIPTPATH}/nextcloud-config must exist."
+  exit 1
+fi
 . "${SCRIPTPATH}"/nextcloud-config
 INCLUDES_PATH="${SCRIPTPATH}"/includes
 DB_ROOT_PASSWORD=$(openssl rand -base64 16)
@@ -53,14 +58,6 @@ fi
 
 ADMIN_PASSWORD=$(openssl rand -base64 12)
 RELEASE=$(freebsd-version | sed "s/STABLE/RELEASE/g" | sed "s/-p[0-9]*//")
-
-
-
-# Check for nextcloud-config and set configuration
-if ! [ -e "${SCRIPTPATH}"/nextcloud-config ]; then
-  echo "${SCRIPTPATH}/nextcloud-config must exist."
-  exit 1
-fi
 
 #####
 #

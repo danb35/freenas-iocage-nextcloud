@@ -36,17 +36,17 @@ DNS_CERT=0
 NO_CERT=0
 DL_FLAGS=""
 DNS_SETTING=""
-SCRIPTNAME="nextcloud-config"
+CONFIG_NAME="nextcloud-config"
 #RELEASE="12.0-RELEASE"
 
 # Check for nextcloud-config and set configuration
 SCRIPT=$(readlink -f "$0")
 SCRIPTPATH=$(dirname "${SCRIPT}")
-if ! [ -e "${SCRIPTPATH}/${SCRIPTNAME}" ]; then
-  echo "${SCRIPTPATH}/${SCRIPTNAME} must exist."
+if ! [ -e "${SCRIPTPATH}"/"${CONFIG_NAME}" ]; then
+  echo "${SCRIPTPATH}/${CONFIG_NAME} must exist."
   exit 1
 fi
-. "${SCRIPTPATH}/${SCRIPTNAME}"
+. "${SCRIPTPATH}"/"${CONFIG_NAME}"
 INCLUDES_PATH="${SCRIPTPATH}"/includes
 
 ADMIN_PASSWORD=$(openssl rand -base64 12)

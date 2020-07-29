@@ -372,7 +372,7 @@ iocage exec "${JAIL_NAME}" chown www /var/log/nextcloud.log
 
 # Skip generation of config and database for reinstall (this already exists when doing a reinstall)
 if [ "${REINSTALL}" == "true" ]; then
-	echo "Reinstall detected, skipping generaion of new config and database"
+	echo "Reinstall detected, skipping generation of new config and database"
 	if [ "${DATABASE}" = "mariadb" ]; then
 	iocage exec "${JAIL_NAME}" cp -f /mnt/includes/my.cnf /root/.my.cnf
 	iocage exec "${JAIL_NAME}" sed -i '' "s|mypassword|${DB_ROOT_PASSWORD}|" /root/.my.cnf

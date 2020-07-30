@@ -69,7 +69,7 @@ In addition, there are some other options which have sensible defaults, but can 
 * DB_PATH, FILES_PATH, CONFIG_PATH, THEMES_PATH and PORTS_PATH: These are the paths to your database files, your data files, nextcloud config files, theme files and the FreeBSD Ports collection.  They default to $POOL_PATH/nextcloud/db, $POOL_PATH/nextcloud/files, $POOL_PATH/nextcloud/config, $POOL_PATH/nextcloud/themes and $POOL_PATH/portsnap, respectively.
 * DATABASE: Which database management system to use.  Default is "mariadb", but can be set to "pgsql" if you prefer to use PostgreSQL.
 * INTERFACE: The network interface to use for the jail.  Defaults to `vnet0`.
-* JAUL_INTERFACES: Defaults to `vnet0:bridge0`, but you can use this option to select a different network bridge if desired.  This is an advanced option; you're on your own here.
+* JAIL_INTERFACES: Defaults to `vnet0:bridge0`, but you can use this option to select a different network bridge if desired.  This is an advanced option; you're on your own here.
 * VNET: Whether to use the iocage virtual network stack.  Defaults to `on`.
 * CERT_EMAIL is the email address Let's Encrypt will use to notify you of certificate expiration, or for occasional other important matters.  This is optional.  If you **are** using Let's Encrypt, though, it should be set to a valid address for the system admin.
 

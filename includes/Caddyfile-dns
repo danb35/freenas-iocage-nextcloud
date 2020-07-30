@@ -1,5 +1,5 @@
 {
-	debug
+	# debug
 	acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
 	email youremailhere
 	# default_sni yourhostnamehere

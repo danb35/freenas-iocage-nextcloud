@@ -1,5 +1,5 @@
 {
-	debug
+	# debug
 	# default_sni yourhostnamehere
 }
 

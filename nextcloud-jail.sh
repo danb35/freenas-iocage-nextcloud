@@ -233,10 +233,9 @@ elif [ "${DATABASE}" = "pgsql" ]; then
   iocage exec "${JAIL_NAME}" mkdir -p /var/db/postgres
 fi
 iocage exec "${JAIL_NAME}" mkdir -p /mnt/includes
+iocage exec "${JAIL_NAME}" mkdir -p /mnt/files
 iocage exec "${JAIL_NAME}" mkdir -p /usr/local/www/nextcloud/config
-mkdir -p "${JAILS_MOUNT}"/jails/${JAIL_NAME}/root/usr/local/www/nextcloud/themes
-mkdir -p "${JAILS_MOUNT}"/jails/${JAIL_NAME}/root/mnt/files
-mkdir -p "${JAILS_MOUNT}"/jails/${JAIL_NAME}/root/mnt/includes
+iocage exec "${JAIL_NAME}" mkdir -p /usr/local/www/nextcloud/themes
 
 # Ports not currently used, Commented out for future use
 #mkdir -p "${JAILS_MOUNT}"/jails/${JAIL_NAME}/root/var/db/portsnap

@@ -1,5 +1,7 @@
 {
 	debug
+	acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
+	email youremailhere
 	# default_sni yourhostnamehere
 }
 
@@ -15,7 +17,14 @@ yourhostnamehere {
 		env front_controller_active true
 	}
 
-	tls /usr/local/etc/pki/tls/certs/fullchain.pem /usr/local/etc/pki/tls/private/privkey.pem
+	tls {
+		dns dns_plugin api_token
+	}
+
+	header {
+		# enable HSTS
+		# Strict-Transport-Security max-age=31536000;
+	}
 
 	redir /.well-known/carddav /remote.php/dav 301
 	redir /.well-known/caldav /remote.php/dav 301

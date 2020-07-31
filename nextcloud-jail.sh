@@ -105,20 +105,11 @@ fi
 
 if [ $DNS_CERT -eq 1 ] && [ -z "${DNS_PLUGIN}" ] ; then
   echo "DNS_PLUGIN must be set to a supported DNS provider."
-  echo "See https://caddyserver.com/docs under the heading of \"DNS Providers\" for list."
-  echo "Be sure to omit the prefix of \"tls.dns.\"."
+  echo "See https://caddyserver.com/download for available plugins."
+  echo "Use only the last part of the name.  E.g., for"
+  echo "\"github.com/caddy-dns/cloudflare\", enter \"coudflare\"."
   exit 1
-fi  
-#if [ $DNS_CERT -eq 1 ] && [ -z "${DNS_ENV}" ] ; then
-#  echo "DNS_ENV must be set to a your DNS provider\'s authentication credentials."
-#  echo "See https://caddyserver.com/docs under the heading of \"DNS Providers\" for more."
-#  exit 1
-#fi  
-
-#if [ $DNS_CERT -eq 1 ] ; then
-#  DL_FLAGS="tls.dns.${DNS_PLUGIN}"
-#  DNS_SETTING="dns ${DNS_PLUGIN}"
-#fi
+fi
 
 # If DB_PATH, FILES_PATH, CONFIG_PATH and PORTS_PATH weren't set in nextcloud-config, set them
 if [ -z "${DB_PATH}" ]; then

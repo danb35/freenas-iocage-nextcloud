@@ -3,3 +3,4 @@ configs/acme_dns_issue.sh
 nextcloud-config
 .DS_Store
 *.pem
+*.log

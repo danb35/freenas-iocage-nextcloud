@@ -276,7 +276,7 @@ then
   exit 1
 fi
 if [ ${DNS_CERT} -eq 1 ]; then
-  if ! iocage exec "${JAIL_NAME}" xcaddy build --output /usr/local/bin/caddy --with github.com/caddy-dns/"${DNS_PLUGIN}"
+  if ! iocage exec "${JAIL_NAME}" xcaddy build master --output /usr/local/bin/caddy --with github.com/caddy-dns/"${DNS_PLUGIN}"
   then
     echo "Failed to build Caddy with ${DNS_PLUGIN} plugin, terminating."
     exit 1

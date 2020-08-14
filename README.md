@@ -47,7 +47,6 @@ Download the repository to a convenient directory on your FreeNAS system by chan
 ```
 JAIL_IP="192.168.1.199"
 DEFAULT_GW_IP="192.168.1.1"
-POOL_PATH="/mnt/tank"
 TIME_ZONE="America/New_York"
 HOST_NAME="YOUR_FQDN"
 STANDALONE_CERT=1
@@ -56,7 +55,6 @@ Many of the options are self-explanatory, and all should be adjusted to suit you
 
 * JAIL_IP is the IP address for your jail.  You can optionally add the netmask in CIDR notation (e.g., 192.168.1.199/24).  If not specified, the netmask defaults to 24 bits.  Values of less than 8 bits or more than 30 bits are invalid.
 * DEFAULT_GW_IP is the address for your default gateway
-* POOL_PATH is the path for your data pool.
 * TIME_ZONE is the time zone of your location, in PHP notation--see the [PHP manual](http://php.net/manual/en/timezones.php) for a list of all valid time zones.
 * HOST_NAME is the fully-qualified domain name you want to assign to your installation.  If you are planning to get a Let's Encrypt certificate (recommended), you must own (or at least control) this domain, because Let's Encrypt will test that control.  If you're using a self-signed cert, or not getting a cert at all, it's only important that this hostname resolve to your jail inside your network.
 * DNS_CERT, STANDALONE_CERT, SELFSIGNED_CERT, and NO_CERT determine which method will be used to generate a TLS certificate (or, in the case of NO_CERT, indicate that you don't want to use SSL at all).  DNS_CERT and STANDALONE_CERT indicate use of DNS or HTTP validation for Let's Encrypt, respectively.  One **and only one** of these must be set to 1.
@@ -66,6 +64,7 @@ Many of the options are self-explanatory, and all should be adjusted to suit you
 In addition, there are some other options which have sensible defaults, but can be adjusted if needed.  These are:
 
 * JAIL_NAME: The name of the jail, defaults to "nextcloud"
+* POOL_PATH is the path for your data pool and is set automatically if left blank.
 * DB_PATH, FILES_PATH, CONFIG_PATH, THEMES_PATH and PORTS_PATH: These are the paths to your database files, your data files, nextcloud config files, theme files and the FreeBSD Ports collection.  They default to $POOL_PATH/nextcloud/db, $POOL_PATH/nextcloud/files, $POOL_PATH/nextcloud/config, $POOL_PATH/nextcloud/themes and $POOL_PATH/portsnap, respectively.
 * DATABASE: Which database management system to use.  Default is "mariadb", but can be set to "pgsql" if you prefer to use PostgreSQL.
 * INTERFACE: The network interface to use for the jail.  Defaults to `vnet0`.

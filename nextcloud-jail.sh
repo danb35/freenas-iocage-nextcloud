@@ -37,6 +37,7 @@ NO_CERT=0
 DL_FLAGS=""
 DNS_SETTING=""
 CONFIG_NAME="nextcloud-config"
+NEXTCLOUD_VERSION="20"
 #RELEASE="12.0-RELEASE"
 
 # Check for nextcloud-config and set configuration
@@ -295,7 +296,7 @@ fi
 #
 #####
 
-FILE="latest-19.tar.bz2"
+FILE="latest-${NEXTCLOUD_VERSION}.tar.bz2"
 if ! iocage exec "${JAIL_NAME}" fetch -o /tmp https://download.nextcloud.com/server/releases/"${FILE}" https://download.nextcloud.com/server/releases/"${FILE}".asc https://nextcloud.com/nextcloud.asc
 then
 	echo "Failed to download Nextcloud"

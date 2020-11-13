@@ -241,10 +241,10 @@ iocage fstab -a "${JAIL_NAME}" "${CONFIG_PATH}" /usr/local/www/nextcloud/config 
 iocage fstab -a "${JAIL_NAME}" "${THEMES_PATH}" /usr/local/www/nextcloud/themes nullfs rw 0 0
 if [ "${DATABASE}" = "mariadb" ]; then
   mkdir -p "${JAILS_MOUNT}"/jails/${JAIL_NAME}/root/var/db/mysql
-  iocage fstab -a "${JAIL_NAME}" "${DB_PATH}/mariadb"  /var/db/mysql  nullfs  rw  0  0
+  iocage fstab -a "${JAIL_NAME}" "${DB_PATH}"/"${DATABASE}" /var/db/mysql  nullfs  rw  0  0
 elif [ "${DATABASE}" = "pgsql" ]; then
   mkdir -p "${JAILS_MOUNT}"/jails/${JAIL_NAME}/root/var/db/postgres
-  iocage fstab -a "${JAIL_NAME}" "${DB_PATH}"/"${DATABASE}"  /var/db/postgres  nullfs  rw  0  0
+  iocage fstab -a "${JAIL_NAME}" "${DB_PATH}"/"${DATABASE}" /var/db/postgres  nullfs  rw  0  0
 fi
 iocage fstab -a "${JAIL_NAME}" "${INCLUDES_PATH}" /mnt/includes nullfs rw 0 0
 iocage exec "${JAIL_NAME}" chown -R www:www /mnt/files
@@ -258,7 +258,7 @@ iocage exec "${JAIL_NAME}" chmod -R 770 /mnt/files
 #####
 
 if [ "${DATABASE}" = "mariadb" ]; then
-	iocage exec "${JAIL_NAME}" pkg install -qy mariadb103-server php74-pdo_mysql php74-mysqli
+  iocage exec "${JAIL_NAME}" pkg install -qy mariadb103-server php74-pdo_mysql php74-mysqli
 elif [ "${DATABASE}" = "pgsql" ]; then
   iocage exec "${JAIL_NAME}" pkg install -qy postgresql12-server php74-pgsql php74-pdo_pgsql
 fi

@@ -216,8 +216,9 @@ mkdir -p "${FILES_PATH}"
 chown -R 80:80 "${FILES_PATH}"
 mkdir -p "${CONFIG_PATH}"
 mkdir -p "${THEMES_PATH}"
-mkdir -p "${PORTS_PATH}"/ports
-mkdir -p "${PORTS_PATH}"/db
+# Ports not currently used, Commented out for future use
+#mkdir -p "${PORTS_PATH}"/ports
+#mkdir -p "${PORTS_PATH}"/db
 iocage exec "${JAIL_NAME}" mkdir -p /mnt/files
 if [ "${DATABASE}" = "mariadb" ]; then
   iocage exec "${JAIL_NAME}" mkdir -p /var/db/mysql

@@ -406,7 +406,7 @@ elif [ "${DATABASE}" = "pgsql" ]; then
   iocage exec "${JAIL_NAME}" chmod 600 /root/.pgpass
   iocage exec "${JAIL_NAME}" chown postgres /var/db/postgres/
   iocage exec "${JAIL_NAME}" /usr/local/etc/rc.d/postgresql initdb
-  iocage exec "${JAIL_NAME}" su -m postgres -c '/usr/local/bin/pg_ctl -D /var/db/postgres/data10 start'
+  iocage exec "${JAIL_NAME}" su -m postgres -c '/usr/local/bin/pg_ctl -D /var/db/postgres/data12 start'
   iocage exec "${JAIL_NAME}" sed -i '' "s|mypassword|${DB_ROOT_PASSWORD}|" /root/.pgpass
   iocage exec "${JAIL_NAME}" psql -U postgres -c "CREATE DATABASE nextcloud;"
   iocage exec "${JAIL_NAME}" psql -U postgres -c "CREATE USER nextcloud WITH ENCRYPTED PASSWORD '${DB_PASSWORD}';"

@@ -1,0 +1,28 @@
+{
+if (${sssd}{Provider} eq "ad") {
+	use NethServer::SSSD; 
+	my $sssd = new NethServer::SSSD();
+	my $baseDN = $sssd->baseDN();
+	my $bindDN = $sssd->bindDN();
+	my $bindPassword = $sssd->bindPassword();
+	my $ldapURI = $sssd->ldapURI();
+	$OUT .=<<__EOF__
+# Configure for Active Directory server
+/usr/libexec/lemonldap-ng/bin/lemonldap-ng-cli -yes 1 set \\
+	authentication \"Active Directory\" \\
+	managerDn \"$bindDN\" \\
+	ldapBase \"$baseDN\" \\
+	ldapVerify \"optional\" \\
+	managerPassword \"$bindPassword" \\
+	ldapServer \"$ldapURI\"
+
+# Set Manager access rules
+/usr/libexec/lemonldap-ng/bin/lemonldap-ng-cli -yes 1 addKey \\
+	\"locationRules/$managerfqdn\" default \'inGroup (\"domain admins\")\' \\
+	\"(\?#Sessions)/(.*\?\\.(fcgi|psgi)/)\?sessions\" \'inGroup (\"domain admins\")\' \\
+	\"(\?#Notifications)/(.*\?\\.(fcgi|psgi)/)?notifications\" \'inGroup (\"domain admins\")\' \\
+	\"(\?#Configuration)^/(.*\?\\.(fcgi|psgi)/)?(manager\\.html|confs/|\$)\" \'inGroup (\"domain admins\")\'
+
+__EOF__
+	}
+}

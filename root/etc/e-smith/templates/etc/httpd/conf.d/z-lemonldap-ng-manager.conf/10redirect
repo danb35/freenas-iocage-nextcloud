@@ -1,0 +1,34 @@
+{
+if (${lemonldap}{managerFqdn}) {
+	$managerfqdn = ${lemonldap}{managerFqdn}
+} else {
+	$managerfqdn = "manager.".$DomainName
+}
+
+$OUT.=<<__EOF__
+# Manager virtual host ($managerfqdn)
+<VirtualHost *:80 [::]:80>
+        ServerName $managerfqdn
+        ServerAdmin webmaster@$DomainName
+#        Protocols h2c http/1.1
+
+        RewriteEngine On
+        RewriteCond %{REQUEST_URI} !^/\.well\-known/acme\-challenge/
+        RewriteCond %{HTTPS} off
+        RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+        Alias /.well-known/acme-challenge/ /var/www/certbot/
+        <Directory /var/www/certbot>
+                Options None
+                AllowOverride None
+                ForceType text/plain
+                RedirectMatch 404 "^(?!/\.well-known/acme-challenge/[\w-]{43}$)"
+                Require method GET POST OPTIONS
+        </Directory>
+
+        ErrorLog "/var/log/httpd/manager.error.log"
+        CustomLog "/var/log/httpd/manager.access.log" common env=!dontlog
+</VirtualHost>
+
+__EOF__
+}

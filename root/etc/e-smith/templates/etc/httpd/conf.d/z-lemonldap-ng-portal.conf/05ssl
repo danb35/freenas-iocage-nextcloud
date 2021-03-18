@@ -1,0 +1,29 @@
+#====================================================================
+# Apache configuration for LemonLDAP::NG Manager
+#====================================================================
+
+# It's generally not a good idea to broadcast the version of Apache you run
+ServerSignature Off
+ServerTokens Prod
+
+# Security configuration
+SSLCipherSuite                    EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH
+SSLProtocol                       All -SSLv2 -SSLv3 -TLSv1 -TLSv1.1
+SSLHonorCipherOrder               on
+# Requires Apache >= 2.4
+SSLCompression                    off
+# To use stapling, we have to enable it globally
+SSLStaplingCache                  "shmcb:logs/stapling-cache(150000)"
+# OCSP Stapling requires Apache >= 2.3.3
+SSLUseStapling                    on
+SSLStaplingResponderTimeout	  5
+SSLStaplingReturnResponderErrors  off
+SSLSessionTickets                 off # Requires Apache >= 2.4.11
+
+# Uncomment this if no previous NameVirtualHost declaration
+#NameVirtualHost "*:80"
+
+# To insert LLNG user id in Apache logs, declare this format and use it in
+# CustomLog directive
+#LogFormat "%v:%p %h %l %{Lm-Remote-User}o %t \"%r\" %>s %O %{Lm-Remote-Custom}o" llng
+

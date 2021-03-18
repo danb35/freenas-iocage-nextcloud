@@ -1,0 +1,45 @@
+{
+if (${sssd}{Provider} eq "ldap") {
+
+	$uri = ${sssd}{LdapURI};
+	if (${sssd}{BaseDN}) {
+		# Using remote LDAP
+		if (${sssd}{StartTLS} eq "enabled") {
+			$uri =~ s/ldap:/ldap+tls:/g
+		}
+		$OUT .=<<__EOF__
+# Configure for remote LDAP server
+/usr/libexec/lemonldap-ng/bin/lemonldap-ng-cli -yes 1 set \\
+	authentication \"LDAP\" \\
+	ldapBase \"${sssd}{BaseDN}\" \\
+	ldapVerify \"optional\" \\
+	ldapServer \"$uri\"
+
+__EOF__
+	}
+	else {
+		# Using local OpenLDAP
+		$OUT .=<<__EOF__
+# Configure for local OpenLDAP server
+/usr/libexec/lemonldap-ng/bin/lemonldap-ng-cli -yes 1 set \\
+	authentication \"LDAP\" \\
+	managerDn \"cn=ldapservice,dc=directory,dc=nh\" \\
+	ldapBase \"dc=directory,dc=nh\" \\
+	ldapVerify \"optional\" \\
+	managerPassword \"\$(cat /var/lib/nethserver/secrets/ldapservice)\" \\
+	ldapServer \"$uri\"
+
+__EOF__
+	}
+
+$OUT .=<<__EOF__
+# Set Manager access rules
+/usr/libexec/lemonldap-ng/bin/lemonldap-ng-cli -yes 1 addKey \\
+	\"locationRules/$managerfqdn\" default \'\$uid eq \"admin\"\' \\
+	\"(\?#Sessions)/(.*\?\\.(fcgi|psgi)/)\?sessions\" \'\$uid eq \"admin\"\' \\
+	\"(\?#Notifications)/(.*\?\\.(fcgi|psgi)/)?notifications\" \'\$uid eq \"admin\"\' \\
+	\"(\?#Configuration)^/(.*\?\\.(fcgi|psgi)/)?(manager\\.html|confs/|\$)\" \'\$uid eq \"admin\"\'
+
+__EOF__
+}
+}

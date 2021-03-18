@@ -1,0 +1,44 @@
+[manager]
+
+; Manager protection: by default, the manager is protected by a demo account.
+; You can protect it :
+; * by Apache itself,
+; * by the parameter 'protection' which can take one of the following
+; values :
+;   * authenticate : all authenticated users can access
+;   * manager	   : manager is protected like other virtual hosts: you
+;                    have to set rules in the corresponding virtual host
+;   * <rule>	   : you can set here directly the rule to apply
+;   * none         : no protection
+protection   = manager
+
+; staticPrefix: relative (or URL) location of static HTML components
+staticPrefix = /static
+;
+; instanceName: Display current LLNG instance into Manager
+;instanceName = Demo
+; location of HTML templates directory
+templateDir  = /usr/share/lemonldap-ng/manager/htdocs/templates
+
+; languages: available languages for manager interface
+languages    = en, fr, it, vi, ar, tr, pl, zh_TW, es
+
+; Manager modules enabled
+; Set here the list of modules you want to see in manager interface
+; The first will be used as default module displayed
+;enabledModules = conf, sessions, notifications, 2ndFA, viewer
+enabledModules = conf, sessions, notifications, 2ndFA
+
+; To avoid restricted users to edit configuration, defaulModule MUST be different than 'conf'
+; 'conf' is set by default
+;defaultModule = viewer
+
+; Viewer module allows us to edit configuration in read-only mode
+; Options can be set with specific rules like this :
+;viewerAllowBrowser = $uid eq 'dwho'
+;viewerAllowDiff = $uid ne 'dwho'
+;
+; Viewer options - Default values
+;viewerHiddenKeys = samlIDPMetaDataNodes samlSPMetaDataNodes managerPassword ManagerDn globalStorageOptions persistentStorageOptions
+;viewerAllowBrowser = 0
+;viewerAllowDiff = 0

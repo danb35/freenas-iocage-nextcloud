@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# Prepare source for RPM build
+
+# download langs from transifex
+
+# tar directory
+cd ui; tar cvzf ../nethserver-acme-dns.tar.gz *

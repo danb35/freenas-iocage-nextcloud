@@ -36,9 +36,9 @@ $OUT .=<<__EOF__
 # Set Manager access rules
 /usr/libexec/lemonldap-ng/bin/lemonldap-ng-cli -yes 1 addKey \\
 	\"locationRules/$managerfqdn\" default \'\$uid eq \"admin\"\' \\
-	\"(\?#Sessions)/(.*\?\\.(fcgi|psgi)/)\?sessions\" \'\$uid eq \"admin\"\' \\
-	\"(\?#Notifications)/(.*\?\\.(fcgi|psgi)/)?notifications\" \'\$uid eq \"admin\"\' \\
-	\"(\?#Configuration)^/(.*\?\\.(fcgi|psgi)/)?(manager\\.html|confs/|\$)\" \'\$uid eq \"admin\"\'
+	\"locationRules/$managerfqdn\" \"(\?#Sessions)/(.*\?\\.(fcgi|psgi)/)\?sessions\" \'\$uid eq \"admin\"\' \\
+	\"locationRules/$managerfqdn\" \"(\?#Notifications)/(.*\?\\.(fcgi|psgi)/)?notifications\" \'\$uid eq \"admin\"\' \\
+	\"locationRules/$managerfqdn\" \"(\?#Configuration)^/(.*\?\\.(fcgi|psgi)/)?(manager\\.html|confs/|\$)\" \'\$uid eq \"admin\"\'
 
 __EOF__
 }

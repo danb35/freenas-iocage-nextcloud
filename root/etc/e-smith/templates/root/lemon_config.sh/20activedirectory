@@ -19,9 +19,9 @@ if (${sssd}{Provider} eq "ad") {
 # Set Manager access rules
 /usr/libexec/lemonldap-ng/bin/lemonldap-ng-cli -yes 1 addKey \\
 	\"locationRules/$managerfqdn\" default \'inGroup (\"domain admins\")\' \\
-	\"(\?#Sessions)/(.*\?\\.(fcgi|psgi)/)\?sessions\" \'inGroup (\"domain admins\")\' \\
-	\"(\?#Notifications)/(.*\?\\.(fcgi|psgi)/)?notifications\" \'inGroup (\"domain admins\")\' \\
-	\"(\?#Configuration)^/(.*\?\\.(fcgi|psgi)/)?(manager\\.html|confs/|\$)\" \'inGroup (\"domain admins\")\'
+	\"locationRules/$managerfqdn\" \"(\?#Sessions)/(.*\?\\.(fcgi|psgi)/)\?sessions\" \'inGroup (\"domain admins\")\' \\
+	\"locationRules/$managerfqdn\" \"(\?#Notifications)/(.*\?\\.(fcgi|psgi)/)?notifications\" \'inGroup (\"domain admins\")\' \\
+	\"locationRules/$managerfqdn\" \"(\?#Configuration)^/(.*\?\\.(fcgi|psgi)/)?(manager\\.html|confs/|\$)\" \'inGroup (\"domain admins\")\'
 
 __EOF__
 	}

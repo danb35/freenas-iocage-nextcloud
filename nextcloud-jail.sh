@@ -267,14 +267,14 @@ fi
 #iocage exec "${JAIL_NAME}" "if [ -z /usr/ports ]; then portsnap fetch extract; else portsnap auto; fi"
 
 # Build xcaddy, use it to build Caddy
-if ! iocage exec "${JAIL_NAME}" "go get -u github.com/caddyserver/xcaddy/cmd/xcaddy"
+if ! iocage exec "${JAIL_NAME}" "go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest"
 then
   echo "Failed to get xcaddy, terminating."
   exit 1
 fi
-if ! iocage exec "${JAIL_NAME}" go build -o /usr/local/bin/xcaddy github.com/caddyserver/xcaddy/cmd/xcaddy
+if ! iocage exec "${JAIL_NAME}" cp /root/go/bin/xcaddy /usr/local/bin/xcaddy
 then
-  echo "Failed to build xcaddy, terminating."
+  echo "Failed to move xcaddy to path, terminating."
   exit 1
 fi
 if [ ${DNS_CERT} -eq 1 ]; then

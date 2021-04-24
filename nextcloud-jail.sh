@@ -37,7 +37,7 @@ NO_CERT=0
 DL_FLAGS=""
 DNS_SETTING=""
 CONFIG_NAME="nextcloud-config"
-NEXTCLOUD_VERSION="20"
+NEXTCLOUD_VERSION="21"
 #RELEASE="12.0-RELEASE"
 
 # Check for nextcloud-config and set configuration
@@ -278,7 +278,7 @@ then
   exit 1
 fi
 if [ ${DNS_CERT} -eq 1 ]; then
-  if ! iocage exec "${JAIL_NAME}" xcaddy build master --output /usr/local/bin/caddy --with github.com/caddy-dns/"${DNS_PLUGIN}"
+  if ! iocage exec "${JAIL_NAME}" xcaddy build --output /usr/local/bin/caddy --with github.com/caddy-dns/"${DNS_PLUGIN}"
   then
     echo "Failed to build Caddy with ${DNS_PLUGIN} plugin, terminating."
     exit 1
@@ -421,6 +421,7 @@ iocage exec "${JAIL_NAME}" echo "Nextcloud Administrator password is ${ADMIN_PAS
 
 # Add the www user to the redis group to allow it to access the socket
 iocage exec "${JAIL_NAME}" pw usermod www -G redis
+iocage exec "${JAIL_NAME}" chmod 777 /var/run/redis/redis.sock
 
 # CLI installation and configuration of Nextcloud
 
@@ -440,7 +441,8 @@ iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ config
 iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ config:system:set memcache.local --value="\OC\Memcache\APCu"'
 iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ config:system:set redis host --value="/var/run/redis/redis.sock"'
 iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ config:system:set redis port --value=0 --type=integer'
-#iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ config:system:set memcache.locking --value="\OC\Memcache\Redis"'
+iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ config:system:set memcache.distributed --value="\OC\Memcache\Redis"'
+iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ config:system:set memcache.locking --value="\OC\Memcache\Redis"'
 iocage exec "${JAIL_NAME}" su -m www -c "php /usr/local/www/nextcloud/occ config:system:set overwritehost --value=\"${HOST_NAME}\""
 if [ $NO_CERT -eq 1 ]; then
   iocage exec "${JAIL_NAME}" su -m www -c "php /usr/local/www/nextcloud/occ config:system:set overwrite.cli.url --value=\"http://${HOST_NAME}/\""

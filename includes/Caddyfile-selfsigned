@@ -17,8 +17,11 @@ yourhostnamehere {
 
 	tls /usr/local/etc/pki/tls/certs/fullchain.pem /usr/local/etc/pki/tls/private/privkey.pem
 
+	# client support (e.g. os x calendar / contacts)
 	redir /.well-known/carddav /remote.php/dav 301
 	redir /.well-known/caldav /remote.php/dav 301
+	redir /.well-known/webfinger /index.php/.well-known/webfinger 301
+	redir /.well-known/nodeinfo /index.php/.well-known/nodeinfo 301
 
 	# .htaccess / data / config / ... shouldn't be accessible from outside
 	@forbidden {

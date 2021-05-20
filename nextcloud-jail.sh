@@ -34,6 +34,7 @@ STANDALONE_CERT=0
 SELFSIGNED_CERT=0
 DNS_CERT=0
 NO_CERT=0
+CERT_EMAIL=""
 DL_FLAGS=""
 DNS_SETTING=""
 CONFIG_NAME="nextcloud-config"
@@ -110,6 +111,16 @@ if [ $DNS_CERT -eq 1 ] && [ -z "${DNS_PLUGIN}" ] ; then
   echo "See https://caddyserver.com/download for available plugins."
   echo "Use only the last part of the name.  E.g., for"
   echo "\"github.com/caddy-dns/cloudflare\", enter \"coudflare\"."
+  exit 1
+fi
+
+if [ $DNS_CERT -eq 1 ] && [ "${CERT_EMAIL}" = "" ] ; then
+  echo "CERT_EMAIL must be set when using Let's Encrypt certs."
+  exit 1
+fi
+
+if [ $STANDALONE_CERT -eq 1 ] && [ "${CERT_EMAIL}" = "" ] ; then
+  echo "CERT_EMAIL must be set when using Let's Encrypt certs."
   exit 1
 fi
 

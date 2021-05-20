@@ -51,6 +51,7 @@ POOL_PATH="/mnt/tank"
 TIME_ZONE="America/New_York"
 HOST_NAME="YOUR_FQDN"
 STANDALONE_CERT=1
+CERT_EMAIL="you@yourdomain.com"
 ```
 Many of the options are self-explanatory, and all should be adjusted to suit your needs, but only a few are mandatory.  The mandatory options are:
 
@@ -62,6 +63,7 @@ Many of the options are self-explanatory, and all should be adjusted to suit you
 * DNS_CERT, STANDALONE_CERT, SELFSIGNED_CERT, and NO_CERT determine which method will be used to generate a TLS certificate (or, in the case of NO_CERT, indicate that you don't want to use SSL at all).  DNS_CERT and STANDALONE_CERT indicate use of DNS or HTTP validation for Let's Encrypt, respectively.  One **and only one** of these must be set to 1.
 * DNS_PLUGIN: If DNS_CERT is set, DNS_PLUGIN must contain the name of the DNS validation plugin you'll use with Caddy to validate domain control.  At this time, the only valid value is `cloudflare` (but see below).
 * DNS_TOKEN: If DNS_CERT is set, this must be set to a properly-scoped Cloudflare API Token.  You will need to create an API token through Cloudflare's dashboard, which must have "Zone / Zone / Read" and "Zone / DNS / Edit" permissions on the zone (i.e., the domain) you're using for your installation.  See [this documentation](https://github.com/libdns/cloudflare) for further details.
+* CERT_EMAIL: If you're obtaining a cert from Let's Encrypt (i.e., either DNS_CERT or STANDALONE_CERT is set to 1), this must be set to a valid email address.  You'll only receive mail there if your cert is about to expire (which should never happen), or if there are significant announcements from Let's Encrypt (which is unlikely to result in more than a few emails per year).
  
 In addition, there are some other options which have sensible defaults, but can be adjusted if needed.  These are:
 

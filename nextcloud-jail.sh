@@ -435,6 +435,10 @@ iocage exec "${JAIL_NAME}" echo "Nextcloud Administrator password is ${ADMIN_PAS
 iocage exec "${JAIL_NAME}" pw usermod www -G redis
 iocage exec "${JAIL_NAME}" chmod 777 /var/run/redis/redis.sock
 
+# Create Nextcloud log directory
+iocage exec "${JAIL_NAME}" mkdir -p /var/log/nextcloud/
+iocage exec "${JAIL_NAME}" chown www:www /var/log/nextcloud
+
 # CLI installation and configuration of Nextcloud
 
 if [ "${DATABASE}" = "mariadb" ]; then
@@ -448,7 +452,7 @@ iocage exec "${JAIL_NAME}" su -m www -c "php /usr/local/www/nextcloud/occ db:con
 iocage exec "${JAIL_NAME}" su -m www -c "php /usr/local/www/nextcloud/occ config:system:set logtimezone --value=\"${TIME_ZONE}\""
 iocage exec "${JAIL_NAME}" su -m www -c "php /usr/local/www/nextcloud/occ config:system:set default_phone_region --value=\"${COUNTRY_CODE}\""
 iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ config:system:set log_type --value="file"'
-iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ config:system:set logfile --value="/var/log/nextcloud.log"'
+iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ config:system:set logfile --value="/var/log/nextcloud/nextcloud.log"'
 iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ config:system:set loglevel --value="2"'
 iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ config:system:set logrotate_size --value="104847600"'
 iocage exec "${JAIL_NAME}" su -m www -c 'php /usr/local/www/nextcloud/occ config:system:set memcache.local --value="\OC\Memcache\APCu"'

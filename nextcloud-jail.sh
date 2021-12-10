@@ -1,5 +1,5 @@
 #!/bin/sh
-# Build an iocage jail under FreeNAS 11.3-12.0 using the current release of Nextcloud 19
+# Build an iocage jail under FreeNAS 11.3-12.0 using the current release of Nextcloud 23
 # https://github.com/danb35/freenas-iocage-nextcloud
 
 # Check for root privileges

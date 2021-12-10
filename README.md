@@ -1,10 +1,10 @@
 # freenas-iocage-nextcloud
-Script to create an iocage jail on FreeNAS for the latest Nextcloud 21 release, including Caddy 2.x, MariaDB 10.3/PostgreSQL 10, and Let's Encrypt
+Script to create an iocage jail on FreeNAS for the latest Nextcloud 23 release, including Caddy 2.x, MariaDB 10.3/PostgreSQL 10, and Let's Encrypt
 
-This script will create an iocage jail on FreeNAS 11.3 or TrueNAS CORE 12.0 with the latest release of Nextcloud 21, along with its dependencies.  It will obtain a trusted certificate from Let's Encrypt for the system, install it, and configure it to renew automatically.  It will create the Nextcloud database and generate a strong root password and user password for the database system.  It will configure the jail to store the database and Nextcloud user data outside the jail, so it will not be lost in the event you need to rebuild the jail.
+This script will create an iocage jail on FreeNAS 11.3 or TrueNAS CORE 12.0 with the latest release of Nextcloud 23, along with its dependencies.  It will obtain a trusted certificate from Let's Encrypt for the system, install it, and configure it to renew automatically.  It will create the Nextcloud database and generate a strong root password and user password for the database system.  It will configure the jail to store the database and Nextcloud user data outside the jail, so it will not be lost in the event you need to rebuild the jail.
 
 ## Status
-This script will work with FreeNAS 11.3, and it should also work with TrueNAS CORE 12.0.  Due to the EOL status of FreeBSD 11.2, it is unlikely to work reliably with earlier releases of FreeNAS.
+This script will work with TrueNAS CORE 12.0, and it should also work with FreeNAS 11.3.  Due to the EOL status of FreeBSD 11.2, it is unlikely to work reliably with earlier releases of FreeNAS.
 
 ## Usage
 
@@ -79,7 +79,7 @@ In addition, there are some other options which have sensible defaults, but can 
 
 If you're going to open ports 80 and 443 from the outside world to your jail, do so before running the script, and set STANDALONE_CERT to 1.  If not, but you use a DNS provider that's supported by Caddy, set DNS_CERT to 1.  If neither of these is true, use either NO_CERT (if you want to run without SSL at all) or SELFSIGNED_CERT (to generate a self-signed certificate--this is also the setting to use if you want to use a certificate from another source).
 
-Also, HOST_NAME needs to resolve to your jail from **inside** your network.  You'll probably need to configure this on your router.  If you're unable to do so, you can edit the hosts file on your client computers to achieve this result.
+Also, HOST_NAME needs to resolve to your jail from **inside** your network.  You'll probably need to configure this on your router, or on whatever other device provides DNS for your LAN.  If you're unable to do so, you can edit the hosts file on your client computers to achieve this result, but consider installing something like [Pi-Hole](https://pi-hole.net/) to give you control over your DNS.
 
 ### Execution
 Once you've downloaded the script and prepared the configuration file, run this script (`script nextcloud.log ./nextcloud-jail.sh`).  The script will run for several minutes.  When it finishes, your jail will be created, Nextcloud will be installed and configured, and you'll be shown the randomly-generated password for the default user ("admin").  You can then log in and create users, add data, and generally do whatever else you like.
@@ -126,4 +126,7 @@ If you're going to run Nextcloud behind a reverse proxy, and you've used one of 
 * `service caddy reload`
 
 ### To Do
-I'd appreciate any suggestions (or, better yet, pull requests) to improve the various config files I'm using.  Most of them are adapted from the default configuration files that ship with the software in question, and have only been lightly edited to work in this application.  But if there are changes to settings or organization that could improve performance, reliability, or security, I'd like to hear about them.
+This script has been around for a few years and appears to be pretty stable.  If you have problems, either open an issue above, or post to one of the forum threads below:
+https://www.truenas.com/community/threads/scripted-installation-of-nextcloud-23-in-iocage-jail.62485/
+https://forum.freenas-community.org/t/scripted-installation-of-nextcloud-23-in-an-iocage-jail/25/6
+

@@ -67,7 +67,7 @@ Many of the options are self-explanatory, and all should be adjusted to suit you
  
 In addition, there are some other options which have sensible defaults, but can be adjusted if needed.  These are:
 
-* NEXTCLOUD_VERSION: You can set this to an earlier or later Nextcloud major release if desired, but be aware that this script is only tested with the default version.  Currently defaults to 21.
+* NEXTCLOUD_VERSION: You can set this to an earlier or later Nextcloud major release if desired, but be aware that this script is only tested with the default version.  Currently defaults to 23.
 * COUNTRY_CODE: The two-letter ISO code for your country, which is required to validate phone numbers in profile settings with no country code.  Defaults to "US".
 * JAIL_NAME: The name of the jail, defaults to "nextcloud"
 * DB_PATH, FILES_PATH, CONFIG_PATH, THEMES_PATH and PORTS_PATH: These are the paths to your database files, your data files, nextcloud config files, theme files and the FreeBSD Ports collection.  They default to $POOL_PATH/nextcloud/db, $POOL_PATH/nextcloud/files, $POOL_PATH/nextcloud/config, $POOL_PATH/nextcloud/themes and $POOL_PATH/portsnap, respectively.

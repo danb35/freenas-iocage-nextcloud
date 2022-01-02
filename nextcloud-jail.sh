@@ -191,19 +191,51 @@ fi
 #####
 
 # List packages to be auto-installed after jail creation
+# PHP Modules listed in order, as seen on "Installation of Linux" in Nextcloud Documentation
+# Notes: The php-hash and the php-json modules are part of PHP Core.
+#        There is no php-libxml module for FreeBSD, instead we install php-xml
+#        The last three modules (iconv, xsl, opcache) are not listed in the documentation for Nextcloud 23
+#        Keeping them because original author put them there
 cat <<__EOF__ >/tmp/pkg.json
-	{
-  "pkgs":[
-  "nano","sudo","redis","php74-ctype","gnupg","bash","go","git",
-  "php74-dom","php74-gd","php74-iconv","php74-json","php74-mbstring",
-  "php74-posix","php74-simplexml","php74-xmlreader","php74-xmlwriter",
-  "php74-zip","php74-zlib","php74-xml","php74","php74-pecl-redis",
-  "php74-session","php74-xsl","php74-filter","php74-pecl-APCu",
-  "php74-curl","php74-fileinfo","php74-bz2","php74-intl","php74-openssl",
-  "php74-ldap","php74-ftp","php74-imap","php74-exif","php74-gmp",
-  "php74-pecl-memcache","php74-pecl-imagick","php74-pecl-smbclient",
-  "php74-opcache","php74-pcntl","php74-bcmath","php74-pecl-APCu","perl5",
-  "p5-Locale-gettext","help2man","texinfo","m4","autoconf"
+{
+  "pkgs": [
+    "nano","sudo","vim","redis","gnupg","bash","go","git","ffmpeg",
+    "perl5","p5-Locale-gettext","help2man","texinfo","m4","autoconf",
+    "php80",
+    "php80-ctype",
+    "php80-curl",
+    "php80-dom",
+    "php80-filter",
+    "php80-gd",
+    "php80-xml",
+    "php80-mbstring",
+    "php80-openssl",
+    "php80-posix",
+    "php80-session",
+    "php80-simplexml",
+    "php80-xmlreader",
+    "php80-xmlwriter",
+    "php80-zip",
+    "php80-zlib",
+    "php80-fileinfo",
+    "php80-bz2",
+    "php80-intl",
+    "php80-ldap",
+    "php80-pecl-smbclient",
+    "php80-ftp",
+    "php80-imap",
+    "php80-bcmath",
+    "php80-gmp",
+    "php80-exif",
+    "php80-pecl-APCu",
+    "php80-pecl-memcache",
+    "php80-pecl-redis",
+    "php80-pecl-imagick",
+    "php80-pcntl",
+    "php80-phar",
+    "php80-iconv",
+    "php80-xsl",
+    "php80-opcache"
   ]
 }
 __EOF__
@@ -270,9 +302,9 @@ iocage exec "${JAIL_NAME}" chmod -R 770 /mnt/files
 #####
 
 if [ "${DATABASE}" = "mariadb" ]; then
-  iocage exec "${JAIL_NAME}" pkg install -qy mariadb103-server php74-pdo_mysql php74-mysqli
+  iocage exec "${JAIL_NAME}" pkg install -qy mariadb103-server php80-pdo_mysql php80-mysqli
 elif [ "${DATABASE}" = "pgsql" ]; then
-  iocage exec "${JAIL_NAME}" pkg install -qy postgresql12-server php74-pgsql php74-pdo_pgsql
+  iocage exec "${JAIL_NAME}" pkg install -qy postgresql12-server php80-pgsql php80-pdo_pgsql
 fi
 
 # Ports not currently used, Commented out for future use

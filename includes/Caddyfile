@@ -10,7 +10,6 @@ yourhostnamehere {
 	file_server
 	log {
 		output file /var/log/yourhostnamehere.log
-		format single_field common_log
 	}
 
 	php_fastcgi 127.0.0.1:9000 {

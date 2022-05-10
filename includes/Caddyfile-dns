@@ -23,6 +23,8 @@ yourhostnamehere {
 	header {
 		# enable HSTS
 		# Strict-Transport-Security max-age=31536000;
+		# prevent direct downloads
+		X-Download-Options noopen
 	}
 
 	# client support (e.g. os x calendar / contacts)

@@ -19,6 +19,11 @@ yourhostnamehere:80, jail_ip:80 {
 	redir /.well-known/webfinger /index.php/.well-known/webfinger 301
 	redir /.well-known/nodeinfo /index.php/.well-known/nodeinfo 301
 
+	header {
+		# prevent direct downloads
+		X-Download-Options noopen
+	}
+
 	# .htaccess / data / config / ... shouldn't be accessible from outside
 	@forbidden {
 		path /.htaccess

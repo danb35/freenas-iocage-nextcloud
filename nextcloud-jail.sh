@@ -391,6 +391,7 @@ then
 	echo "Failed to copy php.ini"
 	exit 1
 fi
+iocage exec "${JAIL_NAME}" chown -R www:www /usr/local/etc/php.ini
 iocage exec "${JAIL_NAME}" cp -f /mnt/includes/redis.conf /usr/local/etc/redis.conf
 iocage exec "${JAIL_NAME}" cp -f /mnt/includes/www.conf /usr/local/etc/php-fpm.d/
 if [ $STANDALONE_CERT -eq 1 ] || [ $DNS_CERT -eq 1 ]; then

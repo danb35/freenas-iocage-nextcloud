@@ -440,6 +440,10 @@ iocage restart "${JAIL_NAME}"
 iocage exec "${JAIL_NAME}" touch /var/log/nextcloud.log
 iocage exec "${JAIL_NAME}" chown www /var/log/nextcloud.log
 
+# Add the www user to the redis group to allow it to access the socket
+iocage exec "${JAIL_NAME}" pw usermod www -G redis
+iocage exec "${JAIL_NAME}" chmod 777 /var/run/redis/redis.sock
+
 # Skip generation of config and database for reinstall (this already exists when doing a reinstall)
 if [ "${REINSTALL}" == "true" ]; then
 	echo "Reinstall detected, skipping generation of new config and database"
@@ -478,10 +482,6 @@ fi
 iocage exec "${JAIL_NAME}" echo "${DB_NAME} root password is ${DB_ROOT_PASSWORD}" > /root/${JAIL_NAME}_db_password.txt
 iocage exec "${JAIL_NAME}" echo "Nextcloud database password is ${DB_PASSWORD}" >> /root/${JAIL_NAME}_db_password.txt
 iocage exec "${JAIL_NAME}" echo "Nextcloud Administrator password is ${ADMIN_PASSWORD}" >> /root/${JAIL_NAME}_db_password.txt
-
-# Add the www user to the redis group to allow it to access the socket
-iocage exec "${JAIL_NAME}" pw usermod www -G redis
-iocage exec "${JAIL_NAME}" chmod 777 /var/run/redis/redis.sock
 
 # Create Nextcloud log directory
 iocage exec "${JAIL_NAME}" mkdir -p /var/log/nextcloud/

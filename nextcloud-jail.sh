@@ -1,6 +1,8 @@
 #!/bin/sh
-# Build an iocage jail under FreeNAS 11.3-12.0 using the current release of Nextcloud 23
+# Build an iocage jail under FreeNAS 11.3-13.0 using the current release of Nextcloud 25
 # https://github.com/danb35/freenas-iocage-nextcloud
+
+set -x
 
 # Check for root privileges
 if ! [ $(id -u) = 0 ]; then
@@ -38,9 +40,8 @@ CERT_EMAIL=""
 DL_FLAGS=""
 DNS_SETTING=""
 CONFIG_NAME="nextcloud-config"
-NEXTCLOUD_VERSION="23"
+NEXTCLOUD_VERSION="25"
 COUNTRY_CODE="US"
-#RELEASE="12.0-RELEASE"
 
 # Check for nextcloud-config and set configuration
 SCRIPT=$(readlink -f "$0")
@@ -201,7 +202,8 @@ cat <<__EOF__ >/tmp/pkg.json
   "pkgs": [
     "nano",
     "sudo",
-    "vim","redis",
+    "vim",
+    "redis",
     "gnupg",
     "bash",
     "go",
@@ -213,40 +215,40 @@ cat <<__EOF__ >/tmp/pkg.json
     "texinfo",
     "m4",
     "autoconf",
-    "php80",
-    "php80-ctype",
-    "php80-curl",
-    "php80-dom",
-    "php80-filter",
-    "php80-gd",
-    "php80-xml",
-    "php80-mbstring",
-    "php80-posix",
-    "php80-session",
-    "php80-simplexml",
-    "php80-xmlreader",
-    "php80-xmlwriter",
-    "php80-zip",
-    "php80-zlib",
-    "php80-fileinfo",
-    "php80-bz2",
-    "php80-intl",
-    "php80-ldap",
-    "php80-pecl-smbclient",
-    "php80-ftp",
-    "php80-imap",
-    "php80-bcmath",
-    "php80-gmp",
-    "php80-exif",
-    "php80-pecl-APCu",
-    "php80-pecl-memcache",
-    "php80-pecl-redis",
-    "php80-pecl-imagick",
-    "php80-pcntl",
-    "php80-phar",
-    "php80-iconv",
-    "php80-xsl",
-    "php80-opcache"
+    "php81",
+    "php81-ctype",
+    "php81-curl",
+    "php81-dom",
+    "php81-filter",
+    "php81-gd",
+    "php81-xml",
+    "php81-mbstring",
+    "php81-posix",
+    "php81-session",
+    "php81-simplexml",
+    "php81-xmlreader",
+    "php81-xmlwriter",
+    "php81-zip",
+    "php81-zlib",
+    "php81-fileinfo",
+    "php81-bz2",
+    "php81-intl",
+    "php81-ldap",
+    "php81-pecl-smbclient",
+    "php81-ftp",
+    "php81-imap",
+    "php81-bcmath",
+    "php81-gmp",
+    "php81-exif",
+    "php81-pecl-APCu",
+    "php81-pecl-memcache",
+    "php81-pecl-redis",
+    "php81-pecl-imagick",
+    "php81-pcntl",
+    "php81-phar",
+    "php81-iconv",
+    "php81-xsl",
+    "php81-opcache"
   ]
 }
 __EOF__
@@ -313,9 +315,9 @@ iocage exec "${JAIL_NAME}" chmod -R 770 /mnt/files
 #####
 
 if [ "${DATABASE}" = "mariadb" ]; then
-  iocage exec "${JAIL_NAME}" pkg install -qy mariadb103-server php80-pdo_mysql php80-mysqli
+  iocage exec "${JAIL_NAME}" pkg install -qy mariadb106-server php81-pdo_mysql php81-mysqli
 elif [ "${DATABASE}" = "pgsql" ]; then
-  iocage exec "${JAIL_NAME}" pkg install -qy postgresql12-server php80-pgsql php80-pdo_pgsql
+  iocage exec "${JAIL_NAME}" pkg install -qy postgresql12-server php81-pgsql php81-pdo_pgsql
 fi
 
 # Ports not currently used, Commented out for future use
@@ -413,7 +415,7 @@ fi
 iocage exec "${JAIL_NAME}" cp -f /mnt/includes/caddy /usr/local/etc/rc.d/
 
 if [ "${DATABASE}" = "mariadb" ]; then
-  iocage exec "${JAIL_NAME}" cp -f /mnt/includes/my-system.cnf /var/db/mysql/my.cnf
+  iocage exec "${JAIL_NAME}" cp -f /mnt/includes/my-system.cnf /usr/local/etc/mysql/conf.d/nextcloud.cnf
 fi
 iocage exec "${JAIL_NAME}" sed -i '' "s/yourhostnamehere/${HOST_NAME}/" /usr/local/www/Caddyfile
 #iocage exec "${JAIL_NAME}" sed -i '' "s/DNS-PLACEHOLDER/${DNS_SETTING}/" /usr/local/www/Caddyfile
@@ -425,11 +427,8 @@ iocage exec "${JAIL_NAME}" sed -i '' "s|mytimezone|${TIME_ZONE}|" /usr/local/etc
 
 iocage exec "${JAIL_NAME}" sysrc caddy_enable="YES"
 iocage exec "${JAIL_NAME}" sysrc caddy_config="/usr/local/www/Caddyfile"
-#iocage exec "${JAIL_NAME}" sysrc caddy_cert_email="${CERT_EMAIL}"
-#iocage exec "${JAIL_NAME}" sysrc caddy_env="${DNS_ENV}"
 
 iocage restart "${JAIL_NAME}"
-
 
 #####
 #
@@ -462,7 +461,6 @@ if [ "${DATABASE}" = "mariadb" ]; then
   iocage exec "${JAIL_NAME}" mysql -u root -e "DROP DATABASE IF EXISTS test;"
   iocage exec "${JAIL_NAME}" mysql -u root -e "DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';"
   iocage exec "${JAIL_NAME}" mysqladmin --user=root password "${DB_ROOT_PASSWORD}" reload
-#  iocage exec "${JAIL_NAME}" mysqladmin reload
   iocage exec "${JAIL_NAME}" cp -f /mnt/includes/my.cnf /root/.my.cnf
   iocage exec "${JAIL_NAME}" sed -i '' "s|mypassword|${DB_ROOT_PASSWORD}|" /root/.my.cnf
 elif [ "${DATABASE}" = "pgsql" ]; then
@@ -479,9 +477,9 @@ elif [ "${DATABASE}" = "pgsql" ]; then
 fi
 
 # Save passwords for later reference
-iocage exec "${JAIL_NAME}" echo "${DB_NAME} root password is ${DB_ROOT_PASSWORD}" > /root/${JAIL_NAME}_db_password.txt
-iocage exec "${JAIL_NAME}" echo "Nextcloud database password is ${DB_PASSWORD}" >> /root/${JAIL_NAME}_db_password.txt
-iocage exec "${JAIL_NAME}" echo "Nextcloud Administrator password is ${ADMIN_PASSWORD}" >> /root/${JAIL_NAME}_db_password.txt
+echo "${DB_NAME} root password is ${DB_ROOT_PASSWORD}" > /root/${JAIL_NAME}_db_password.txt
+echo "Nextcloud database password is ${DB_PASSWORD}" >> /root/${JAIL_NAME}_db_password.txt
+echo "Nextcloud Administrator password is ${ADMIN_PASSWORD}" >> /root/${JAIL_NAME}_db_password.txt
 
 # Create Nextcloud log directory
 iocage exec "${JAIL_NAME}" mkdir -p /var/log/nextcloud/
@@ -490,7 +488,7 @@ iocage exec "${JAIL_NAME}" chown www:www /var/log/nextcloud
 # CLI installation and configuration of Nextcloud
 
 if [ "${DATABASE}" = "mariadb" ]; then
-  iocage exec "${JAIL_NAME}" su -m www -c "php /usr/local/www/nextcloud/occ maintenance:install --database=\"mysql\" --database-name=\"nextcloud\" --database-user=\"nextcloud\" --database-pass=\"${DB_PASSWORD}\" --database-host=\"localhost:/tmp/mysql.sock\" --admin-user=\"admin\" --admin-pass=\"${ADMIN_PASSWORD}\" --data-dir=\"/mnt/files\""
+  iocage exec "${JAIL_NAME}" su -m www -c "php /usr/local/www/nextcloud/occ maintenance:install --database=\"mysql\" --database-name=\"nextcloud\" --database-user=\"nextcloud\" --database-pass=\"${DB_PASSWORD}\" --database-host=\"localhost:/var/run/mysql/mysql.sock\" --admin-user=\"admin\" --admin-pass=\"${ADMIN_PASSWORD}\" --data-dir=\"/mnt/files\""
   iocage exec "${JAIL_NAME}" su -m www -c "php /usr/local/www/nextcloud/occ config:system:set mysql.utf8mb4 --type boolean --value=\"true\""
 elif [ "${DATABASE}" = "pgsql" ]; then
   iocage exec "${JAIL_NAME}" su -m www -c "php /usr/local/www/nextcloud/occ maintenance:install --database=\"pgsql\" --database-name=\"nextcloud\" --database-user=\"nextcloud\" --database-pass=\"${DB_PASSWORD}\" --database-host=\"localhost:/tmp/.s.PGSQL.5432\" --admin-user=\"admin\" --admin-pass=\"${ADMIN_PASSWORD}\" --data-dir=\"/mnt/files\""

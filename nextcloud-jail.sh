@@ -1,5 +1,5 @@
 #!/bin/sh
-# Build an iocage jail under FreeNAS 11.3-13.0 using the current release of Nextcloud 25
+# Build an iocage jail under FreeNAS 11.3-13.0 using the current release of Nextcloud 26
 # https://github.com/danb35/freenas-iocage-nextcloud
 
 set -x
@@ -40,7 +40,7 @@ CERT_EMAIL=""
 DL_FLAGS=""
 DNS_SETTING=""
 CONFIG_NAME="nextcloud-config"
-NEXTCLOUD_VERSION="25"
+NEXTCLOUD_VERSION="26"
 COUNTRY_CODE="US"
 
 # Check for nextcloud-config and set configuration
@@ -247,6 +247,7 @@ cat <<__EOF__ >/tmp/pkg.json
     "php81-pcntl",
     "php81-phar",
     "php81-iconv",
+    "php81-sysvsem",
     "php81-xsl",
     "php81-opcache"
   ]

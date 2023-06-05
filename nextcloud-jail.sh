@@ -415,9 +415,22 @@ else
 fi
 iocage exec "${JAIL_NAME}" cp -f /mnt/includes/caddy /usr/local/etc/rc.d/
 
+# Copy database .cnf file and edit old ones in the event of a reinstall from old version of mariadb
 if [ "${DATABASE}" = "mariadb" ]; then
   iocage exec "${JAIL_NAME}" cp -f /mnt/includes/my-system.cnf /usr/local/etc/mysql/conf.d/nextcloud.cnf
+    if [ "${REINSTALL}" == "true" ]; then
+    echo "Removing old version of .cnf file, and editing config for new MariaDB version."
+      if ! iocage exec "${JAIL_NAME}" rm /var/db/mysql/my.cnf
+        then
+	echo "Could not delete old .cnf file. You will need to do it manually, or you will have server errors."
+      fi
+      if ! iocage exec "${JAIL_NAME}" sed -i '' "s|/tmp/mysql.sock|/var/run/mysql/mysql.sock|" /usr/local/www/nextcloud/config
+        then
+	echo "Could not edit config file for database. You will need to do it manually, or you will have server errors."
+      fi
+    fi
 fi
+
 iocage exec "${JAIL_NAME}" sed -i '' "s/yourhostnamehere/${HOST_NAME}/" /usr/local/www/Caddyfile
 #iocage exec "${JAIL_NAME}" sed -i '' "s/DNS-PLACEHOLDER/${DNS_SETTING}/" /usr/local/www/Caddyfile
 iocage exec "${JAIL_NAME}" sed -i '' "s/dns_plugin/${DNS_PLUGIN}/" /usr/local/www/Caddyfile
@@ -484,6 +497,11 @@ elif [ "${DATABASE}" = "pgsql" ]; then
   iocage exec "${JAIL_NAME}" psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE nextcloud TO nextcloud;"
   iocage exec "${JAIL_NAME}" psql -U postgres -c "SELECT pg_reload_conf();"
 fi
+
+# Remove and edit config files because of mariadb update
+if [ "${REINSTALL}" == "true" ]; then
+	echo "Editing config file for new MariaDB version."
+	
 
 # Save passwords for later reference
 echo "${DB_NAME} root password is ${DB_ROOT_PASSWORD}" > /root/${JAIL_NAME}_db_password.txt

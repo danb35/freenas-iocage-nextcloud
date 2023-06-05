@@ -420,6 +420,7 @@ if [ "${DATABASE}" = "mariadb" ]; then
   iocage exec "${JAIL_NAME}" cp -f /mnt/includes/my-system.cnf /usr/local/etc/mysql/conf.d/nextcloud.cnf
     if [ "${REINSTALL}" == "true" ]; then
     echo "Removing old version of .cnf file, and editing config for new MariaDB version."
+    iocage exec "${JAIL_NAME}" cp /var/db/mysql/my.cnf /var/db/mysql/my.cnf.bak
       if ! iocage exec "${JAIL_NAME}" rm /var/db/mysql/my.cnf
         then
 	echo "Could not delete old .cnf file. You will need to do it manually, or you will have server errors."
@@ -497,11 +498,6 @@ elif [ "${DATABASE}" = "pgsql" ]; then
   iocage exec "${JAIL_NAME}" psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE nextcloud TO nextcloud;"
   iocage exec "${JAIL_NAME}" psql -U postgres -c "SELECT pg_reload_conf();"
 fi
-
-# Remove and edit config files because of mariadb update
-if [ "${REINSTALL}" == "true" ]; then
-	echo "Editing config file for new MariaDB version."
-	
 
 # Save passwords for later reference
 echo "${DB_NAME} root password is ${DB_ROOT_PASSWORD}" > /root/${JAIL_NAME}_db_password.txt

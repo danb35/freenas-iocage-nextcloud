@@ -40,7 +40,7 @@ CERT_EMAIL=""
 DL_FLAGS=""
 DNS_SETTING=""
 CONFIG_NAME="nextcloud-config"
-NEXTCLOUD_VERSION="26"
+NEXTCLOUD_VERSION="27"
 COUNTRY_CODE="US"
 
 # Check for nextcloud-config and set configuration

@@ -219,41 +219,41 @@ cat <<__EOF__ >/tmp/pkg.json
     "texinfo",
     "m4",
     "autoconf",
-    "php81",
-    "php81-ctype",
-    "php81-curl",
-    "php81-dom",
-    "php81-filter",
-    "php81-gd",
-    "php81-xml",
-    "php81-mbstring",
-    "php81-posix",
-    "php81-session",
-    "php81-simplexml",
-    "php81-xmlreader",
-    "php81-xmlwriter",
-    "php81-zip",
-    "php81-zlib",
-    "php81-fileinfo",
-    "php81-bz2",
-    "php81-intl",
-    "php81-ldap",
-    "php81-pecl-smbclient",
-    "php81-ftp",
-    "php81-imap",
-    "php81-bcmath",
-    "php81-gmp",
-    "php81-exif",
-    "php81-pecl-APCu",
-    "php81-pecl-memcache",
-    "php81-pecl-redis",
-    "php81-pecl-imagick",
-    "php81-pcntl",
-    "php81-phar",
-    "php81-iconv",
-    "php81-sysvsem",
-    "php81-xsl",
-    "php81-opcache"
+    "php82",
+    "php82-ctype",
+    "php82-curl",
+    "php82-dom",
+    "php82-filter",
+    "php82-gd",
+    "php82-xml",
+    "php82-mbstring",
+    "php82-posix",
+    "php82-session",
+    "php82-simplexml",
+    "php82-xmlreader",
+    "php82-xmlwriter",
+    "php82-zip",
+    "php82-zlib",
+    "php82-fileinfo",
+    "php82-bz2",
+    "php82-intl",
+    "php82-ldap",
+    "php82-pecl-smbclient",
+    "php82-ftp",
+    "php82-imap",
+    "php82-bcmath",
+    "php82-gmp",
+    "php82-exif",
+    "php82-pecl-APCu",
+    "php82-pecl-memcache",
+    "php82-pecl-redis",
+    "php82-pecl-imagick",
+    "php82-pcntl",
+    "php82-phar",
+    "php82-iconv",
+    "php82-sysvsem",
+    "php82-xsl",
+    "php82-opcache"
   ]
 }
 __EOF__
@@ -320,9 +320,9 @@ iocage exec "${JAIL_NAME}" chmod -R 770 /mnt/files
 #####
 
 if [ "${DATABASE}" = "mariadb" ]; then
-  iocage exec "${JAIL_NAME}" pkg install -qy mariadb106-server php81-pdo_mysql php81-mysqli
+  iocage exec "${JAIL_NAME}" pkg install -qy mariadb106-server php82-pdo_mysql php82-mysqli
 elif [ "${DATABASE}" = "pgsql" ]; then
-  iocage exec "${JAIL_NAME}" pkg install -qy postgresql12-server php81-pgsql php81-pdo_pgsql
+  iocage exec "${JAIL_NAME}" pkg install -qy postgresql12-server php82-pgsql php82-pdo_pgsql
 fi
 
 # Ports not currently used, Commented out for future use

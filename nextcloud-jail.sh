@@ -63,6 +63,10 @@ elif [ "${DATABASE}" = "pgsql" ]; then
 fi
 
 RELEASE=$(freebsd-version | cut -d - -f -1)"-RELEASE"
+# If release is 13.1-RELEASE, change to 13.2-RELEASE
+if [ "${RELEASE}" = "13.1-RELEASE" ]; then
+  RELEASE="13.2-RELEASE"
+fi 
 JAILS_MOUNT=$(zfs get -H -o value mountpoint $(iocage get -p)/iocage)
 
 #####

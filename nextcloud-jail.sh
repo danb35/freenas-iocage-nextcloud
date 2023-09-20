@@ -320,9 +320,9 @@ iocage exec "${JAIL_NAME}" chmod -R 770 /mnt/files
 #####
 
 if [ "${DATABASE}" = "mariadb" ]; then
-  iocage exec "${JAIL_NAME}" pkg install -qy mariadb106-server php82-pdo_mysql php82-mysqli
+  iocage exec "${JAIL_NAME}" pkg install -y mariadb106-server php82-pdo_mysql php82-mysqli
 elif [ "${DATABASE}" = "pgsql" ]; then
-  iocage exec "${JAIL_NAME}" pkg install -qy postgresql12-server php82-pgsql php82-pdo_pgsql
+  iocage exec "${JAIL_NAME}" pkg install -y postgresql13-server php82-pgsql php82-pdo_pgsql
 fi
 
 # Ports not currently used, Commented out for future use
@@ -477,7 +477,7 @@ elif [ "${DATABASE}" = "pgsql" ]; then
   iocage exec "${JAIL_NAME}" chmod 600 /root/.pgpass
   iocage exec "${JAIL_NAME}" chown postgres /var/db/postgres/
   iocage exec "${JAIL_NAME}" /usr/local/etc/rc.d/postgresql initdb
-  iocage exec "${JAIL_NAME}" su -m postgres -c '/usr/local/bin/pg_ctl -D /var/db/postgres/data12 start'
+  iocage exec "${JAIL_NAME}" su -m postgres -c '/usr/local/bin/pg_ctl -D /var/db/postgres/data13 start'
   iocage exec "${JAIL_NAME}" sed -i '' "s|mypassword|${DB_ROOT_PASSWORD}|" /root/.pgpass
   if ! iocage exec "${JAIL_NAME}" psql -U postgres -c "CREATE DATABASE nextcloud;"
   then

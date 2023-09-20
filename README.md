@@ -1,5 +1,5 @@
 # freenas-iocage-nextcloud
-Script to create an iocage jail on FreeNAS for the latest Nextcloud 27 release, including Caddy 2.x, MariaDB 10.6/PostgreSQL 10, and Let's Encrypt
+Script to create an iocage jail on FreeNAS for the latest Nextcloud 27 release, including Caddy 2.x, MariaDB 10.6/PostgreSQL 13, and Let's Encrypt
 
 This script will create an iocage jail on TrueNAS CORE 13.0 with the latest release of Nextcloud 27, along with its dependencies.  It will obtain a trusted certificate from Let's Encrypt for the system, install it, and configure it to renew automatically.  It will create the Nextcloud database and generate a strong root password and user password for the database system.  It will configure the jail to store the database and Nextcloud user data outside the jail, so it will not be lost in the event you need to rebuild the jail.
 

@@ -44,6 +44,7 @@ NEXTCLOUD_VERSION="27"
 COUNTRY_CODE="US"
 JAIL_BASEJAIL="false"
 PGP_KEYSERVER="pgpkeys.eu"
+# Will not work with keys.openpgp.org because GPG requires keys to have a user ID, however, Nextcloud have not authenticated their key on openpgp.
 NEXTCLOUD_PGP_KEYID="28806A878AE423A28372792ED75899B9A724937A"
 
 # Check for nextcloud-config and set configuration
@@ -264,11 +265,12 @@ __EOF__
 # Create the jail and install previously listed packages
 if [ "${JAIL_BASEJAIL}" = "true" ]; then
     JAIL_TYPE_OPTION="--basejail"
+    echo "Creating jail ${JAIL_NAME} as a Basejail, this can take a while..."
 else
     JAIL_TYPE_OPTION=""
+    echo "Creating jail ${JAIL_NAME} as a normal (clone) jail..."
 fi
-
-if ! iocage create --name "${JAIL_NAME}" -p /tmp/pkg.json -r "${RELEASE}" interfaces="${JAIL_INTERFACES}" ip4_addr="${INTERFACE}|${IP}/${NETMASK}" defaultrouter="${DEFAULT_GW_IP}" boot="on" host_hostname="${JAIL_NAME}" vnet="${VNET}" "${JAIL_TYPE_OPTION}"
+if ! iocage create --name "${JAIL_NAME}" -p /tmp/pkg.json -r "${RELEASE}" ${JAIL_TYPE_OPTION:+"${JAIL_TYPE_OPTION}"} interfaces="${JAIL_INTERFACES}" ip4_addr="${INTERFACE}|${IP}/${NETMASK}" defaultrouter="${DEFAULT_GW_IP}" boot="on" host_hostname="${JAIL_NAME}" vnet="${VNET}"
 then
 	echo "Failed to create jail"
 	exit 1

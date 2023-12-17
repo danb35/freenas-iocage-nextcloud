@@ -2,7 +2,7 @@
 # Build an iocage jail under FreeNAS 11.3-13.0 using the current release of Nextcloud 26
 # https://github.com/danb35/freenas-iocage-nextcloud
 
-# set -x
+set -x
 
 # Check for root privileges
 if ! [ $(id -u) = 0 ]; then

@@ -70,12 +70,17 @@ In addition, there are some other options which have sensible defaults, but can 
 * NEXTCLOUD_VERSION: You can set this to an earlier or later Nextcloud major release if desired, but be aware that this script is only tested with the default version.  Currently defaults to 27.
 * COUNTRY_CODE: The two-letter ISO code for your country, which is required to validate phone numbers in profile settings with no country code.  Defaults to "US".
 * JAIL_NAME: The name of the jail, defaults to "nextcloud"
+* JAIL_BASEJAIL: If set to "true", creates a base jail instead of the default
+  clone jail. It is easier and faster to update the underlying FreeBSD OS in a
+  base jail, but they might take up more space than clone jails.
 * DB_PATH, FILES_PATH, CONFIG_PATH, and THEMES_PATH: These are the paths to your database files, your data files, nextcloud config files, theme files and the FreeBSD Ports collection.  They default to $POOL_PATH/nextcloud/db, $POOL_PATH/nextcloud/files, $POOL_PATH/nextcloud/config, and $POOL_PATH/nextcloud/themes, respectively.
 * DATABASE: Which database management system to use.  Default is "mariadb", but can be set to "pgsql" if you prefer to use PostgreSQL.
 * INTERFACE: The network interface to use for the jail.  Defaults to `vnet0`.
 * JAIL_INTERFACES: Defaults to `vnet0:bridge0`, but you can use this option to select a different network bridge if desired.  This is an advanced option; you're on your own here.
 * VNET: Whether to use the iocage virtual network stack.  Defaults to `on`.
 * CERT_EMAIL is the email address Let's Encrypt will use to notify you of certificate expiration, or for occasional other important matters.  This is optional.  If you **are** using Let's Encrypt, though, it should be set to a valid address for the system admin.
+* PGP_KEYSERVER: Server from which to fetch the Nextcloud Security team signing key, which is used to verify the downloaded Nextcloud setup files. It is used when the key cannot be downloaded directly from nextcloud.com.
+* NEXTCLOUD_PGP_KEYID: The fingerprint of the Nextcloud Security team key id.
 
 If you're going to open ports 80 and 443 from the outside world to your jail, do so before running the script, and set STANDALONE_CERT to 1.  If not, but you use a DNS provider that's supported by Caddy, set DNS_CERT to 1.  If neither of these is true, use either NO_CERT (if you want to run without SSL at all) or SELFSIGNED_CERT (to generate a self-signed certificate--this is also the setting to use if you want to use a certificate from another source).
 

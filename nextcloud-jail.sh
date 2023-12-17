@@ -42,6 +42,10 @@ DNS_SETTING=""
 CONFIG_NAME="nextcloud-config"
 NEXTCLOUD_VERSION="27"
 COUNTRY_CODE="US"
+JAIL_BASEJAIL="false"
+PGP_KEYSERVER="pgpkeys.eu"
+# Will not work with keys.openpgp.org because GPG requires keys to have a user ID, however, Nextcloud have not authenticated their key on openpgp.
+NEXTCLOUD_PGP_KEYID="28806A878AE423A28372792ED75899B9A724937A"
 
 # Check for nextcloud-config and set configuration
 SCRIPT=$(readlink -f "$0")
@@ -259,7 +263,14 @@ cat <<__EOF__ >/tmp/pkg.json
 __EOF__
 
 # Create the jail and install previously listed packages
-if ! iocage create --name "${JAIL_NAME}" -p /tmp/pkg.json -r "${RELEASE}" interfaces="${JAIL_INTERFACES}" ip4_addr="${INTERFACE}|${IP}/${NETMASK}" defaultrouter="${DEFAULT_GW_IP}" boot="on" host_hostname="${JAIL_NAME}" vnet="${VNET}"
+if [ "${JAIL_BASEJAIL}" = "true" ]; then
+    JAIL_TYPE_OPTION="--basejail"
+    echo "Creating jail ${JAIL_NAME} as a Basejail, this can take a while..."
+else
+    JAIL_TYPE_OPTION=""
+    echo "Creating jail ${JAIL_NAME} as a normal (clone) jail..."
+fi
+if ! iocage create --name "${JAIL_NAME}" -p /tmp/pkg.json -r "${RELEASE}" ${JAIL_TYPE_OPTION:+"${JAIL_TYPE_OPTION}"} interfaces="${JAIL_INTERFACES}" ip4_addr="${INTERFACE}|${IP}/${NETMASK}" defaultrouter="${DEFAULT_GW_IP}" boot="on" host_hostname="${JAIL_NAME}" vnet="${VNET}"
 then
 	echo "Failed to create jail"
 	exit 1
@@ -360,12 +371,21 @@ fi
 #####
 
 FILE="latest-${NEXTCLOUD_VERSION}.tar.bz2"
-if ! iocage exec "${JAIL_NAME}" fetch -o /tmp https://download.nextcloud.com/server/releases/"${FILE}" https://download.nextcloud.com/server/releases/"${FILE}".asc https://nextcloud.com/nextcloud.asc
+if ! iocage exec "${JAIL_NAME}" fetch -o /tmp https://download.nextcloud.com/server/releases/"${FILE}" https://download.nextcloud.com/server/releases/"${FILE}".asc 
 then
 	echo "Failed to download Nextcloud"
 	exit 1
 fi
-iocage exec "${JAIL_NAME}" gpg --import /tmp/nextcloud.asc
+if iocage exec "${JAIL_NAME}" fetch -o /tmp https://nextcloud.com/nextcloud.asc
+then
+    iocage exec "${JAIL_NAME}" gpg --import /tmp/nextcloud.asc
+else
+    if ! iocage exec "${JAIL_NAME}" gpg --keyserver "${PGP_KEYSERVER}" --recv-key "${NEXTCLOUD_PGP_KEYID}"
+    then
+	echo "Failed to download Nextcloud GPG signing key"
+	exit 1
+    fi
+fi
 if ! iocage exec "${JAIL_NAME}" gpg --verify /tmp/"${FILE}".asc
 then
 	echo "GPG Signature Verification Failed!"

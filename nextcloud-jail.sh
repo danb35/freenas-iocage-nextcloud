@@ -579,7 +579,9 @@ iocage fstab -r "${JAIL_NAME}" "${INCLUDES_PATH}" /mnt/includes nullfs rw 0 0
 #
 #####
 
-# Done!
+# Done!  Turn off debug and print summary information
+set +x
+
 echo "Installation complete!"
 if [ $NO_CERT -eq 1 ]; then
   echo "Using your web browser, go to http://${HOST_NAME} to log in"

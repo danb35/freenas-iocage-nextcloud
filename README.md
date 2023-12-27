@@ -1,7 +1,7 @@
 # freenas-iocage-nextcloud
-Script to create an iocage jail on FreeNAS for the latest Nextcloud 27 release, including Caddy 2.x, MariaDB 10.6/PostgreSQL 13, and Let's Encrypt
+Script to create an iocage jail on FreeNAS for the latest Nextcloud 28 release, including Caddy 2.x, MariaDB 10.6/PostgreSQL 13, and Let's Encrypt
 
-This script will create an iocage jail on TrueNAS CORE 13.0 with the latest release of Nextcloud 27, along with its dependencies.  It will obtain a trusted certificate from Let's Encrypt for the system, install it, and configure it to renew automatically.  It will create the Nextcloud database and generate a strong root password and user password for the database system.  It will configure the jail to store the database and Nextcloud user data outside the jail, so it will not be lost in the event you need to rebuild the jail.
+This script will create an iocage jail on TrueNAS CORE 13.0 with the latest release of Nextcloud 28, along with its dependencies.  It will obtain a trusted certificate from Let's Encrypt for the system, install it, and configure it to renew automatically.  It will create the Nextcloud database and generate a strong root password and user password for the database system.  It will configure the jail to store the database and Nextcloud user data outside the jail, so it will not be lost in the event you need to rebuild the jail.
 
 ## Status
 This script will work with TrueNAS CORE 13.0.  Due to the EOL status of FreeBSD 12.0, it is unlikely to work reliably with earlier releases of TrueNAS.  It will not work with TrueNAS SCALE; use the Apps ecosystem instead to install Nextcloud there.
@@ -67,7 +67,7 @@ Many of the options are self-explanatory, and all should be adjusted to suit you
  
 In addition, there are some other options which have sensible defaults, but can be adjusted if needed.  These are:
 
-* NEXTCLOUD_VERSION: You can set this to an earlier or later Nextcloud major release if desired, but be aware that this script is only tested with the default version.  Currently defaults to 27.
+* NEXTCLOUD_VERSION: You can set this to an earlier or later Nextcloud major release if desired, but be aware that this script is only tested with the default version.  Currently defaults to 28.
 * COUNTRY_CODE: The two-letter ISO code for your country, which is required to validate phone numbers in profile settings with no country code.  Defaults to "US".
 * JAIL_NAME: The name of the jail, defaults to "nextcloud"
 * JAIL_BASEJAIL: If set to "true", creates a base jail instead of the default

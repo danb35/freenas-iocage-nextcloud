@@ -40,7 +40,7 @@ CERT_EMAIL=""
 DL_FLAGS=""
 DNS_SETTING=""
 CONFIG_NAME="nextcloud-config"
-NEXTCLOUD_VERSION="27"
+NEXTCLOUD_VERSION="28"
 COUNTRY_CODE="US"
 JAIL_BASEJAIL="false"
 PGP_KEYSERVER="pgpkeys.eu"
@@ -255,6 +255,7 @@ cat <<__EOF__ >/tmp/pkg.json
     "php82-pcntl",
     "php82-phar",
     "php82-iconv",
+    "php82-sodium",
     "php82-sysvsem",
     "php82-xsl",
     "php82-opcache"

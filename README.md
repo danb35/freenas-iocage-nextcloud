@@ -43,7 +43,7 @@ If you use 1 dataset with subfolders it's recomended to use a similar structure.
 If these are not present, a directory `/nextcloud` will be created in `$POOL_PATH`, and subdirectories of `db` (with a subdirectory of either `mariadb` or `pgsql`, depending on which database you chose), `files`, `config`, and `themes` will be created there.  But for a variety of reasons, it's preferred to keep these things in their own dataset.
 
 ### Installation
-Download the repository to a convenient directory on your FreeNAS system by changing to that directory and running `git clone https://github.com/danb35/freenas-iocage-nextcloud`.  Then change into the new `freenas-iocage-nextcloud` directory and create a file called `nextcloud-config` with your favorite text editor.  In its minimal form, it would look like this:
+Download the repository to a convenient directory on your FreeNAS system by changing to that directory and running `git clone https://github.com/danb35/freenas-iocage-nextcloud`.  Then change into the new `freenas-iocage-nextcloud` directory and create a file called `nextcloud-config` with your favorite text editor.  If you don't have a favorite text editor, `nano` is a good choice, so you'd create the file by running `nano nextcloud-config`.  In its minimal form, it would look like this:
 ```
 JAIL_IP="192.168.1.199"
 DEFAULT_GW_IP="192.168.1.1"

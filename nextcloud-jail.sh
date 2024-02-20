@@ -462,9 +462,6 @@ iocage restart "${JAIL_NAME}"
 #
 #####
 
-iocage exec "${JAIL_NAME}" touch /var/log/nextcloud.log
-iocage exec "${JAIL_NAME}" chown www /var/log/nextcloud.log
-
 # Add the www user to the redis group to allow it to access the socket
 iocage exec "${JAIL_NAME}" pw usermod www -G redis
 iocage exec "${JAIL_NAME}" chmod 777 /var/run/redis/redis.sock

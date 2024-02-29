@@ -46,6 +46,7 @@ JAIL_BASEJAIL="false"
 PGP_KEYSERVER="pgpkeys.eu"
 # Will not work with keys.openpgp.org because GPG requires keys to have a user ID, however, Nextcloud have not authenticated their key on openpgp.
 NEXTCLOUD_PGP_KEYID="28806A878AE423A28372792ED75899B9A724937A"
+MX_WINDOW="5"
 
 # Check for nextcloud-config and set configuration
 SCRIPT=$(readlink -f "$0")
@@ -566,7 +567,7 @@ fi
 
 iocage exec "${JAIL_NAME}" su -m www -c 'php -f /usr/local/www/nextcloud/cron.php'
 iocage exec "${JAIL_NAME}" crontab -u www /mnt/includes/www-crontab
-
+iocage exec "${JAIL_NAME}" su -m www -c "php /usr/local/www/nextcloud/occ config:system:set maintenance_window_start --type=integer --value=${MX_WINDOW}"
 
 # Don't need /mnt/includes any more, so unmount it
 iocage fstab -r "${JAIL_NAME}" "${INCLUDES_PATH}" /mnt/includes nullfs rw 0 0

@@ -31,6 +31,23 @@ yourhostnamehere {
 	redir /.well-known/webfinger /index.php/.well-known/webfinger 301
 	redir /.well-known/nodeinfo /index.php/.well-known/nodeinfo 301
 
+	# Required for legacy
+	@notlegacy {
+		path *.php
+		not path /index*
+		not path /remote*
+		not path /public*
+		not path /cron*
+		not path /core/ajax/update*
+		not path /status*
+		not path /ocs/v1*
+		not path /ocs/v2*
+		not path /updater/*
+		not path /ocs-provider/*
+		not path */richdocumentscode/proxy*
+	}
+	rewrite @notlegacy /index.php{uri}
+
 	# .htaccess / data / config / ... shouldn't be accessible from outside
 	@forbidden {
 		path /.htaccess

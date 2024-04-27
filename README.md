@@ -67,7 +67,7 @@ Many of the options are self-explanatory, and all should be adjusted to suit you
  
 In addition, there are some other options which have sensible defaults, but can be adjusted if needed.  These are:
 
-* NEXTCLOUD_VERSION: You can set this to an earlier or later Nextcloud major release if desired, but be aware that this script is only tested with the default version.  Currently defaults to 28.
+* NEXTCLOUD_VERSION: You can set this to an earlier or later Nextcloud major release if desired, but be aware that this script is only tested with the default version.  Currently defaults to 29.
 * COUNTRY_CODE: The two-letter ISO code for your country, which is required to validate phone numbers in profile settings with no country code.  Defaults to "US".
 * JAIL_NAME: The name of the jail, defaults to "nextcloud"
 * JAIL_BASEJAIL: If set to "true", creates a base jail instead of the default

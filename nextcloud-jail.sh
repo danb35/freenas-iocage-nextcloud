@@ -41,6 +41,7 @@ DL_FLAGS=""
 DNS_SETTING=""
 CONFIG_NAME="nextcloud-config"
 NEXTCLOUD_VERSION="29"
+PHP_VERSION="83"
 COUNTRY_CODE="US"
 JAIL_BASEJAIL="false"
 PGP_KEYSERVER="pgpkeys.eu"
@@ -224,42 +225,42 @@ cat <<__EOF__ >/tmp/pkg.json
     "texinfo",
     "m4",
     "autoconf",
-    "php83",
-    "php83-ctype",
-    "php83-curl",
-    "php83-dom",
-    "php83-filter",
-    "php83-gd",
-    "php83-xml",
-    "php83-mbstring",
-    "php83-posix",
-    "php83-session",
-    "php83-simplexml",
-    "php83-xmlreader",
-    "php83-xmlwriter",
-    "php83-zip",
-    "php83-zlib",
-    "php83-fileinfo",
-    "php83-bz2",
-    "php83-intl",
-    "php83-ldap",
-    "php83-pecl-smbclient",
-    "php83-ftp",
-    "php83-imap",
-    "php83-bcmath",
-    "php83-gmp",
-    "php83-exif",
-    "php83-pecl-APCu",
-    "php83-pecl-memcache",
-    "php83-pecl-redis",
-    "php83-pecl-imagick",
-    "php83-pcntl",
-    "php83-phar",
-    "php83-iconv",
-    "php83-sodium",
-    "php83-sysvsem",
-    "php83-xsl",
-    "php83-opcache"
+    "php${PHP_VERSION}",
+    "php${PHP_VERSION}-ctype",
+    "php${PHP_VERSION}-curl",
+    "php${PHP_VERSION}-dom",
+    "php${PHP_VERSION}-filter",
+    "php${PHP_VERSION}-gd",
+    "php${PHP_VERSION}-xml",
+    "php${PHP_VERSION}-mbstring",
+    "php${PHP_VERSION}-posix",
+    "php${PHP_VERSION}-session",
+    "php${PHP_VERSION}-simplexml",
+    "php${PHP_VERSION}-xmlreader",
+    "php${PHP_VERSION}-xmlwriter",
+    "php${PHP_VERSION}-zip",
+    "php${PHP_VERSION}-zlib",
+    "php${PHP_VERSION}-fileinfo",
+    "php${PHP_VERSION}-bz2",
+    "php${PHP_VERSION}-intl",
+    "php${PHP_VERSION}-ldap",
+    "php${PHP_VERSION}-pecl-smbclient",
+    "php${PHP_VERSION}-ftp",
+    "php${PHP_VERSION}-imap",
+    "php${PHP_VERSION}-bcmath",
+    "php${PHP_VERSION}-gmp",
+    "php${PHP_VERSION}-exif",
+    "php${PHP_VERSION}-pecl-APCu",
+    "php${PHP_VERSION}-pecl-memcache",
+    "php${PHP_VERSION}-pecl-redis",
+    "php${PHP_VERSION}-pecl-imagick",
+    "php${PHP_VERSION}-pcntl",
+    "php${PHP_VERSION}-phar",
+    "php${PHP_VERSION}-iconv",
+    "php${PHP_VERSION}-sodium",
+    "php${PHP_VERSION}-sysvsem",
+    "php${PHP_VERSION}-xsl",
+    "php${PHP_VERSION}-opcache"
   ]
 }
 __EOF__
@@ -333,9 +334,9 @@ iocage exec "${JAIL_NAME}" chmod -R 770 /mnt/files
 #####
 
 if [ "${DATABASE}" = "mariadb" ]; then
-  iocage exec "${JAIL_NAME}" pkg install -y mariadb106-server php83-pdo_mysql php83-mysqli
+  iocage exec "${JAIL_NAME}" pkg install -y mariadb106-server php${PHP_VERSION}-pdo_mysql php${PHP_VERSION}-mysqli
 elif [ "${DATABASE}" = "pgsql" ]; then
-  iocage exec "${JAIL_NAME}" pkg install -y postgresql13-server php83-pgsql php83-pdo_pgsql
+  iocage exec "${JAIL_NAME}" pkg install -y postgresql13-server php${PHP_VERSION}-pgsql php${PHP_VERSION}-pdo_pgsql
 fi
 
 # Ports not currently used, Commented out for future use

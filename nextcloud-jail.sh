@@ -40,7 +40,7 @@ CERT_EMAIL=""
 DL_FLAGS=""
 DNS_SETTING=""
 CONFIG_NAME="nextcloud-config"
-NEXTCLOUD_VERSION="29"
+NEXTCLOUD_VERSION="30"
 COUNTRY_CODE="US"
 JAIL_BASEJAIL="false"
 PGP_KEYSERVER="pgpkeys.eu"
@@ -68,9 +68,9 @@ elif [ "${DATABASE}" = "pgsql" ]; then
 fi
 
 RELEASE=$(freebsd-version | cut -d - -f -1)"-RELEASE"
-# If release is 13.1-RELEASE, change to 13.2-RELEASE
-if [ "${RELEASE}" = "13.1-RELEASE" ]; then
-  RELEASE="13.2-RELEASE"
+# If release is 13.3-RELEASE, change to 13.4-RELEASE
+if [ "${RELEASE}" = "13.3-RELEASE" ]; then
+  RELEASE="13.4-RELEASE"
 fi 
 JAILS_MOUNT=$(zfs get -H -o value mountpoint $(iocage get -p)/iocage)
 

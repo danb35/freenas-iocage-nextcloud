@@ -1,10 +1,10 @@
 # freenas-iocage-nextcloud
-Script to create an iocage jail on FreeNAS for the latest Nextcloud 28 release, including Caddy 2.x, MariaDB 10.6/PostgreSQL 13, and Let's Encrypt
+Script to create an iocage jail on FreeNAS for the latest Nextcloud 30 release, including Caddy 2.x, MariaDB 10.6/PostgreSQL 13, and Let's Encrypt
 
-This script will create an iocage jail on TrueNAS CORE 13.0 with the latest release of Nextcloud 28, along with its dependencies.  It will obtain a trusted certificate from Let's Encrypt for the system, install it, and configure it to renew automatically.  It will create the Nextcloud database and generate a strong root password and user password for the database system.  It will configure the jail to store the database and Nextcloud user data outside the jail, so it will not be lost in the event you need to rebuild the jail.
+This script will create an iocage jail on TrueNAS CORE 13.3 with the latest release of Nextcloud 28, along with its dependencies.  It will obtain a trusted certificate from Let's Encrypt for the system, install it, and configure it to renew automatically.  It will create the Nextcloud database and generate a strong root password and user password for the database system.  It will configure the jail to store the database and Nextcloud user data outside the jail, so it will not be lost in the event you need to rebuild the jail.
 
 ## Status
-This script will work with TrueNAS CORE 13.0.  Due to the EOL status of FreeBSD 12.0, it is unlikely to work reliably with earlier releases of TrueNAS.  It will not work with TrueNAS SCALE; use the Apps ecosystem instead to install Nextcloud there.
+This script will work with TrueNAS CORE 13.3.  Due to the EOL status of earlier FreeBSD versions, it is unlikely to work reliably with earlier releases of TrueNAS.  It will not work with TrueNAS SCALE; use the Apps ecosystem instead to install Nextcloud there.
 
 ## Usage
 
@@ -74,7 +74,7 @@ In addition, there are some other options which have sensible defaults, but can 
   clone jail. It is easier and faster to update the underlying FreeBSD OS in a
   base jail, but they might take up more space than clone jails.
 * DB_PATH, FILES_PATH, CONFIG_PATH, and THEMES_PATH: These are the paths to your database files, your data files, nextcloud config files, theme files and the FreeBSD Ports collection.  They default to $POOL_PATH/nextcloud/db, $POOL_PATH/nextcloud/files, $POOL_PATH/nextcloud/config, and $POOL_PATH/nextcloud/themes, respectively.
-* DATABASE: Which database management system to use.  Default is "mariadb", but can be set to "pgsql" if you prefer to use PostgreSQL.
+* DATABASE: Which database management system to use.  Default is "mariadb", but can be set to "pgsql" if you prefer to use PostgreSQL.  At this time, PostgreSQL does not seem to be working.
 * INTERFACE: The network interface to use for the jail.  Defaults to `vnet0`.
 * JAIL_INTERFACES: Defaults to `vnet0:bridge0`, but you can use this option to select a different network bridge if desired.  This is an advanced option; you're on your own here.
 * VNET: Whether to use the iocage virtual network stack.  Defaults to `on`.

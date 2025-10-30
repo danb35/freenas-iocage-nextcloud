@@ -1,3 +1,6 @@
+# NO LONGER SUPPORTED
+This project is no longer maintained.  For a script to install Nextcloud in a FreeBSD environment, consider https://github.com/tschettervictor/bsd-apps
+
 # freenas-iocage-nextcloud
 Script to create an iocage jail on FreeNAS for the latest Nextcloud 30 release, including Caddy 2.x, MariaDB 10.6/PostgreSQL 13, and Let's Encrypt
 
